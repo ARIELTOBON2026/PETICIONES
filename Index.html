@@ -58,7 +58,6 @@
     input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23, 78, 166, .10); }
     input[readonly] { background: #f8fafc; color: #475569; }
     textarea { min-height: 95px; resize: vertical; }
-    .input-help { font-size: 11px; color: var(--gray); margin-top: 5px; }
 
     .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
     .btn { border: 0; border-radius: 9px; padding: 11px 18px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: .2s; }
@@ -171,7 +170,7 @@
       <div class="panel">
         <div class="panel-header">
           <div><h2>Información de la petición</h2></div>
-          <button class="btn btn-secondary btn-small" onclick="nuevoRegistro()">＋ Nuevo</button>
+          <button class="btn btn-warning btn-small" onclick="nuevoRegistro()">＋ Nuevo</button>
         </div>
         <div class="panel-body">
           <form id="formPeticion">
@@ -180,7 +179,6 @@
               <div class="form-group">
                 <label>Consecutivo</label>
                 <input type="text" id="consecutivo" readonly>
-                <span class="input-help">Generado automáticamente.</span>
               </div>
               <div class="form-group">
                 <label>ID / Radicado <span class="required">*</span></label>
@@ -221,7 +219,6 @@
               <div class="form-group">
                 <label>Término (días) <span class="required">*</span></label>
                 <input type="number" id="termino" min="0" value="15" required onchange="calcularFechaLimite()">
-                <span class="input-help">Días calendario.</span>
               </div>
               <div class="form-group">
                 <label>Fecha límite de respuesta</label>
@@ -309,7 +306,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>Detalle de la petición</h3>
-        <button class="close" onclick="cerrarModal()">×</button>
+        <button class="close" onclick="cerrarModal()">×--</button>
       </div>
       <div class="modal-body" id="detalleContenido"></div>
     </div>
@@ -318,125 +315,38 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ========================================================
-    // CONFIGURACIÓN DUAL: Google Apps Script O GitHub Pages
-    // ========================================================
-    const isGAS = typeof google !== 'undefined' && google.script;
+    // URL del despliegue oficial de Google Apps Script
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3PWOqSUkzv5PNP0kDAJxdCcwHcMw791Ib6YhEbkiCgOqpcB2eyy5jLkCwH-SmXZo/exec";
 
-    // Función wrapper para manejar llamadas al backend (Real o Simulado)
+    // Conexión dinámica (Google Apps Script nativo o Fetch a Web App)
     function callBackend(method, payload, successCallback, failureCallback) {
-      if (isGAS) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(successCallback)
           .withFailureHandler(failureCallback)[method](payload);
       } else {
-        // Modo Simulación para GitHub Pages (usa localStorage)
-        setTimeout(() => {
-          try {
-            const result = mockBackend[method](payload);
-            successCallback(result);
-          } catch (error) {
-            failureCallback(error);
-          }
-        }, 400); // Simula latencia de red
+        const queryParams = new URLSearchParams({ action: method });
+        fetch(`${WEB_APP_URL}?${queryParams.toString()}`, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload || {})
+        })
+        .then(res => {
+          if (!res.ok) throw new Error('Error de conexión con el servidor.');
+          return res.json();
+        })
+        .then(data => {
+          if (data.status === 'error') throw new Error(data.message || 'Error en Google Apps Script.');
+          successCallback(data.result);
+        })
+        .catch(err => {
+          console.error('Error Web App:', err);
+          failureCallback(err);
+        });
       }
     }
 
-    // Backend Simulado (Solo se usa si NO está en Google Apps Script)
-    const mockBackend = {
-      obtenerDatosIniciales: () => {
-        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
-        return {
-          tipos: ['Derecho de Petición', 'Queja', 'Reclamo', 'Solicitud', 'Consulta'],
-          funcionarios: ['Juan Pérez', 'María Gómez', 'Carlos López', 'Ana Rodríguez'],
-          estados: ['PENDIENTE', 'EN TRÁMITE', 'RESPONDIDO', 'CERRADO'],
-          mediosRespuesta: ['Correo electrónico', 'Oficio', 'Presencial', 'Notificación'],
-          registros: registros,
-          dashboard: calcularDashboardMock(registros)
-        };
-      },
-      obtenerSiguienteConsecutivo: () => {
-        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
-        if (registros.length === 0) return 1;
-        const max = Math.max(...registros.map(r => parseInt(r['Consecutivo']) || 0));
-        return max + 1;
-      },
-      guardarPeticion: (datos) => {
-        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
-        const consecutivo = mockBackend.obtenerSiguienteConsecutivo();
-        const nuevo = procesarRegistroMock(datos, consecutivo);
-        nuevo.fila = registros.length + 2;
-        registros.push(nuevo);
-        localStorage.setItem('sm_registros', JSON.stringify(registros));
-        return { ok: true, mensaje: 'Registro guardado correctamente (Modo Demo)', consecutivo };
-      },
-      actualizarPeticion: (datos) => {
-        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
-        const index = registros.findIndex(r => r.fila == datos.fila);
-        if (index !== -1) {
-          registros[index] = procesarRegistroMock(datos, datos.consecutivo);
-          localStorage.setItem('sm_registros', JSON.stringify(registros));
-          return { ok: true, mensaje: 'Registro actualizado correctamente (Modo Demo)', consecutivo: datos.consecutivo };
-        }
-        throw new Error('Registro no encontrado');
-      },
-      listarRegistros: () => {
-        return JSON.parse(localStorage.getItem('sm_registros') || '[]');
-      }
-    };
-
-    function procesarRegistroMock(datos, consecutivo) {
-      const hoy = new Date();
-      const fechaRecepcion = new Date(datos.fechaRecepcion + 'T12:00:00');
-      const fechaLimite = new Date(fechaRecepcion);
-      fechaLimite.setDate(fechaLimite.getDate() + parseInt(datos.termino || 15));
-      
-      const diasRestantes = datos.fechaRespuesta ? 0 : Math.ceil((fechaLimite - hoy) / (1000 * 60 * 60 * 24));
-      let semaforo = 'EN TÉRMINO';
-      if (datos.fechaRespuesta) semaforo = 'RESPONDIDO';
-      else if (diasRestantes < 0) semaforo = 'VENCIDO';
-      else if (diasRestantes <= 3) semaforo = 'PRÓXIMO A VENCER';
-
-      return {
-        fila: datos.fila || 0,
-        'Consecutivo': String(consecutivo),
-        'ID / Radicado': datos.radicado,
-        'Fecha recepción': datos.fechaRecepcion,
-        'Peticionario': datos.peticionario,
-        'Documento / Identificación': datos.documento,
-        'Teléfono': datos.telefono,
-        'Correo': datos.correo,
-        'Tipo de petición': datos.tipoPeticion,
-        'Asunto': datos.asunto,
-        'Funcionario responsable': datos.funcionario,
-        'Término (días)': datos.termino,
-        'Fecha límite de respuesta': fechaLimite.toISOString().split('T')[0],
-        'Días transcurridos': Math.max(0, Math.ceil((hoy - fechaRecepcion) / (1000 * 60 * 60 * 24))),
-        'Días restantes': diasRestantes,
-        'Semáforo': semaforo,
-        'Estado': datos.estado || 'PENDIENTE',
-        'Fecha de respuesta': datos.fechaRespuesta || '',
-        'Medio de respuesta': datos.medioRespuesta || '',
-        'Días utilizados': datos.fechaRespuesta ? Math.ceil((new Date(datos.fechaRespuesta + 'T12:00:00') - fechaRecepcion) / (1000 * 60 * 60 * 24)) : '',
-        'Cumplimiento': datos.fechaRespuesta ? 'CUMPLIDO' : 'PENDIENTE',
-        'Observaciones': datos.observaciones
-      };
-    }
-
-    function calcularDashboardMock(registros) {
-      let pendientes = 0, enTramite = 0, respondidas = 0, vencidas = 0;
-      registros.forEach(r => {
-        if (r['Estado'] === 'PENDIENTE') pendientes++;
-        if (r['Estado'] === 'EN TRÁMITE') enTramite++;
-        if (r['Estado'] === 'RESPONDIDO' || r['Estado'] === 'CERRADO') respondidas++;
-        if (r['Semáforo'] === 'VENCIDO') vencidas++;
-      });
-      return { total: registros.length, pendientes, enTramite, respondidas, vencidas };
-    }
-
-    // ========================================================
-    // LÓGICA DE LA APLICACIÓN
-    // ========================================================
     let registros = [];
     let registrosFiltrados = [];
     let tipos = [], funcionarios = [], estados = [], mediosRespuesta = [];
@@ -485,6 +395,7 @@
     function llenarCombos() {
       const llenar = (id, datos) => {
         const el = document.getElementById(id);
+        if(!el) return;
         el.innerHTML = '<option value="">Seleccione...</option>';
         datos.forEach(item => {
           const opt = document.createElement('option');
@@ -498,6 +409,7 @@
       
       const llenarFiltro = (id, datos) => {
         const el = document.getElementById(id);
+        if(!el) return;
         el.innerHTML = '<option value="">Todos</option>';
         datos.forEach(item => {
           const opt = document.createElement('option');
@@ -624,255 +536,91 @@
       document.getElementById('fechaRespuesta').value = convertirFechaInput(registro['Fecha de respuesta']);
       document.getElementById('medioRespuesta').value = registro['Medio de respuesta'] || '';
       document.getElementById('observaciones').value = registro['Observaciones'] || '';
+      
       mostrarModoEdicion();
-      calcularFechaLimite();
       mostrarSeccion('registro', document.querySelector('.tab'));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      calcularFechaLimite();
       mostrarToast('Registro cargado para edición.', 'info');
     }
 
-    function verDetalle(indice) {
-      const registro = registrosFiltrados[indice];
-      if (!registro) return;
-      const campos = [
-        ['Consecutivo', 'Consecutivo'], ['ID / Radicado', 'ID / Radicado'], ['Fecha recepción', 'Fecha recepción'],
-        ['Peticionario', 'Peticionario'], ['Documento / Identificación', 'Documento'], ['Teléfono', 'Teléfono'],
-        ['Correo', 'Correo'], ['Tipo de petición', 'Tipo de petición'], ['Asunto', 'Asunto'],
-        ['Funcionario responsable', 'Funcionario responsable'], ['Término (días)', 'Término'],
-        ['Fecha límite de respuesta', 'Fecha límite'], ['Días transcurridos', 'Días transcurridos'],
-        ['Días restantes', 'Días restantes'], ['Semáforo', 'Semáforo'], ['Estado', 'Estado'],
-        ['Fecha de respuesta', 'Fecha de respuesta'], ['Medio de respuesta', 'Medio de respuesta'],
-        ['Días utilizados', 'Días utilizados'], ['Cumplimiento', 'Cumplimiento'], ['Observaciones', 'Observaciones']
-      ];
-      let html = '<div class="form-grid">';
-      campos.forEach(function (campo) {
-        let valor = registro[campo[0]] || '';
-        let clase = 'form-group';
-        if (campo[0] === 'Asunto' || campo[0] === 'Observaciones') clase += ' span-2';
-        if (campo[0] === 'Semáforo') valor = obtenerBadgeSemaforo(valor);
-        html += '<div class="' + clase + '"><label>' + escaparHTML(campo[1]) + '</label><div>' + (campo[0] === 'Semáforo' ? valor : escaparHTML(valor)) + '</div></div>';
-      });
-      html += '</div>';
-      html += '<div class="actions"><button class="btn btn-primary" onclick="cerrarModal(); editarRegistro(' + indice + ')">✏️ Editar registro</button></div>';
-      document.getElementById('detalleContenido').innerHTML = html;
-      document.getElementById('modalDetalle').classList.add('show');
+    function mostrarModoEdicion() {
+      const banner = document.getElementById('editBanner');
+      if (banner) banner.classList.add('show');
     }
 
-    function cerrarModal() {
-      document.getElementById('modalDetalle').classList.remove('show');
-    }
-
-    function cargarRegistros() {
-      mostrarLoading(true, 'Actualizando registros...');
-      callBackend('listarRegistros', null,
-        function (data) {
-          ocultarLoading();
-          registros = data || [];
-          aplicarFiltros();
-          actualizarDashboardDesdeRegistros();
-          mostrarToast('Información actualizada.', 'success');
-        },
-        function (error) {
-          ocultarLoading();
-          mostrarToast(obtenerMensajeError(error), 'error');
-        }
-      );
-    }
-
-    function aplicarFiltros() {
-      const radicado = valorInput('filtroRadicado').toLowerCase();
-      const documento = valorInput('filtroDocumento').toLowerCase();
-      const peticionario = valorInput('filtroPeticionario').toLowerCase();
-      const funcionario = valorInput('filtroFuncionario').toLowerCase();
-      const tipo = valorInput('filtroTipo').toLowerCase();
-      const estado = valorInput('filtroEstado').toLowerCase();
-      const semaforo = valorInput('filtroSemaforo').toLowerCase();
-      const desde = valorInput('filtroDesde');
-      const hasta = valorInput('filtroHasta');
-
-      registrosFiltrados = registros.filter(function (r) {
-        if (radicado && !String(r['ID / Radicado'] || '').toLowerCase().includes(radicado)) return false;
-        if (documento && !String(r['Documento / Identificación'] || '').toLowerCase().includes(documento)) return false;
-        if (peticionario && !String(r['Peticionario'] || '').toLowerCase().includes(peticionario)) return false;
-        if (funcionario && String(r['Funcionario responsable'] || '').toLowerCase() !== funcionario) return false;
-        if (tipo && String(r['Tipo de petición'] || '').toLowerCase() !== tipo) return false;
-        if (estado && String(r['Estado'] || '').toLowerCase() !== estado) return false;
-        if (semaforo && String(r['Semáforo'] || '').toLowerCase() !== semaforo) return false;
-        
-        const fecha = convertirFechaInput(r['Fecha recepción']);
-        if (desde && (!fecha || fecha < desde)) return false;
-        if (hasta && (!fecha || fecha > hasta)) return false;
-        return true;
-      });
-      renderizarTabla(registrosFiltrados);
-    }
-
-    function limpiarFiltros() {
-      ['filtroRadicado', 'filtroDocumento', 'filtroPeticionario', 'filtroDesde', 'filtroHasta'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('filtroFuncionario').value = '';
-      document.getElementById('filtroTipo').value = '';
-      document.getElementById('filtroEstado').value = '';
-      document.getElementById('filtroSemaforo').value = '';
-      aplicarFiltros();
-    }
-
-    function renderizarTabla(lista) {
-      const tbody = document.getElementById('tablaResultados');
-      tbody.innerHTML = '';
-      document.getElementById('contadorResultados').textContent = '(' + lista.length + ')';
-
-      if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="12"><div class="empty">No se encontraron registros.</div></td></tr>';
-        return;
-      }
-
-      lista.forEach(function (r, indice) {
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td><strong>' + escaparHTML(r['Consecutivo'] || '') + '</strong></td>' +
-          '<td>' + escaparHTML(r['ID / Radicado'] || '') + '</td>' +
-          '<td>' + formatearFechaVisible(r['Fecha recepción']) + '</td>' +
-          '<td>' + escaparHTML(r['Peticionario'] || '') + '</td>' +
-          '<td>' + escaparHTML(r['Documento / Identificación'] || '') + '</td>' +
-          '<td>' + escaparHTML(r['Tipo de petición'] || '') + '</td>' +
-          '<td>' + escaparHTML(r['Funcionario responsable'] || '') + '</td>' +
-          '<td>' + formatearFechaVisible(r['Fecha límite de respuesta']) + '</td>' +
-          '<td>' + obtenerDiasRestantesHTML(r['Días restantes']) + '</td>' +
-          '<td>' + obtenerBadgeSemaforo(r['Semáforo']) + '</td>' +
-          '<td>' + obtenerBadgeEstado(r['Estado']) + '</td>' +
-          '<td>' +
-            '<button class="btn btn-info btn-small" onclick="verDetalle(' + indice + ')">👁️ Ver</button> ' +
-            '<button class="btn btn-warning btn-small" onclick="editarRegistro(' + indice + ')">✏️ Editar</button>' +
-          '</td>';
-        tbody.appendChild(tr);
-      });
-    }
-
-    // ========================================================
-    // FUNCIONES AUXILIARES
-    // ========================================================
-
-    function obtenerBadgeSemaforo(semaforo) {
-      if (!semaforo) return '<span class="badge badge-gray">-</span>';
-      const s = String(semaforo).toUpperCase();
-      if (s.includes('VENCIDO')) return '<span class="badge badge-red">🔴 VENCIDO</span>';
-      if (s.includes('PRÓXIMO')) return '<span class="badge badge-yellow">🟡 PRÓXIMO A VENCER</span>';
-      if (s.includes('RESPONDIDO')) return '<span class="badge badge-blue">🔵 RESPONDIDO</span>';
-      return '<span class="badge badge-green">🟢 EN TÉRMINO</span>';
-    }
-
-    function obtenerBadgeEstado(estado) {
-      if (!estado) return '<span class="badge badge-gray">-</span>';
-      const e = String(estado).toUpperCase();
-      if (e === 'PENDIENTE') return '<span class="badge badge-yellow">PENDIENTE</span>';
-      if (e === 'EN TRÁMITE') return '<span class="badge badge-blue">EN TRÁMITE</span>';
-      if (e === 'RESPONDIDO') return '<span class="badge badge-green">RESPONDIDO</span>';
-      if (e === 'CERRADO') return '<span class="badge badge-gray">CERRADO</span>';
-      return '<span class="badge badge-gray">' + escaparHTML(estado) + '</span>';
-    }
-
-    function obtenerDiasRestantesHTML(dias) {
-      if (dias === '' || dias === null || dias === undefined) return '-';
-      const d = parseInt(dias, 10);
-      if (isNaN(d)) return '-';
-      if (d < 0) return '<strong style="color:var(--danger)">' + d + '</strong>';
-      if (d <= 3) return '<strong style="color:var(--warning)">' + d + '</strong>';
-      return d;
-    }
-
-    function formatearFechaVisible(fecha) {
-      if (!fecha) return '-';
-      const partes = String(fecha).split('-');
-      if (partes.length === 3) return partes[2] + '/' + partes[1] + '/' + partes[0];
-      return fecha;
-    }
-
-    function convertirFechaInput(fecha) {
-      if (!fecha) return '';
-      const partes = String(fecha).split('/');
-      if (partes.length === 3) return partes[2] + '-' + partes[1] + '-' + partes[0];
-      return fecha;
-    }
-
-    function valorInput(id) {
-      const el = document.getElementById(id);
-      return el ? el.value : '';
-    }
-
-    function escaparHTML(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-
-    function mostrarLoading(mostrar, texto = 'Cargando...') {
-      const el = document.getElementById('loading');
-      if (mostrar) {
-        document.getElementById('loadingText').textContent = texto;
-        el.classList.add('show');
-      } else {
-        el.classList.remove('show');
-      }
-    }
-
-    function ocultarLoading() { mostrarLoading(false); }
-
-    function mostrarToast(mensaje, tipo = 'info') {
-      const toast = document.getElementById('toast');
-      toast.textContent = mensaje;
-      toast.className = 'toast show ' + tipo;
-      setTimeout(() => { toast.classList.remove('show'); }, 4000);
-    }
-
-    function obtenerMensajeError(error) {
-      return error.message || error.toString() || 'Ocurrió un error desconocido.';
+    function ocultarModoEdicion() {
+      const banner = document.getElementById('editBanner');
+      if (banner) banner.classList.remove('show');
     }
 
     function establecerFechaHoy() {
-      const hoy = new Date();
-      const yyyy = hoy.getFullYear();
-      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-      const dd = String(hoy.getDate()).padStart(2, '0');
-      const inputFecha = document.getElementById('fechaRecepcion');
-      if (inputFecha) inputFecha.value = yyyy + '-' + mm + '-' + dd;
+      const input = document.getElementById('fechaRecepcion');
+      if (input && !input.value) {
+        const hoy = new Date().toISOString().split('T')[0];
+        input.value = hoy;
+      }
+      calcularFechaLimite();
     }
 
     function calcularFechaLimite() {
-      const fechaRecepcion = document.getElementById('fechaRecepcion').value;
-      const termino = parseInt(document.getElementById('termino').value, 10) || 0;
+      const fechaRecepcionVal = document.getElementById('fechaRecepcion').value;
+      const terminoVal = document.getElementById('termino').value;
       const preview = document.getElementById('previewSeguimiento');
+      const campoLimite = document.getElementById('fechaLimite');
 
-      if (fechaRecepcion && termino >= 0) {
-        const fecha = new Date(fechaRecepcion + 'T12:00:00');
-        fecha.setDate(fecha.getDate() + termino);
-        const yyyy = fecha.getFullYear();
-        const mm = String(fecha.getMonth() + 1).padStart(2, '0');
-        const dd = String(fecha.getDate()).padStart(2, '0');
-        
-        document.getElementById('fechaLimite').value = yyyy + '-' + mm + '-' + dd;
-        preview.innerHTML = '<div style="text-align:center; padding: 10px;">' +
-          '<p style="margin:0; font-size:14px; color:var(--gray);">Fecha límite calculada:</p>' +
-          '<p style="margin:5px 0 0; font-size:22px; font-weight:800; color:var(--primary);">' + dd + '/' + mm + '/' + yyyy + '</p></div>';
-      } else {
-        document.getElementById('fechaLimite').value = '';
-        preview.innerHTML = 'Complete la fecha de recepción y el término para visualizar la fecha límite.';
+      if (!fechaRecepcionVal || terminoVal === '') {
+        if (campoLimite) campoLimite.value = '';
+        if (preview) preview.innerHTML = 'Complete la fecha de recepción y el término para visualizar la fecha límite.';
+        return;
+      }
+
+      const f = new Date(fechaRecepcionVal + 'T12:00:00');
+      f.setDate(f.getDate() + parseInt(terminoVal));
+      const fechaLimStr = f.toISOString().split('T')[0];
+      if (campoLimite) campoLimite.value = fechaLimStr;
+
+      const hoy = new Date();
+      const diasRestantes = Math.ceil((f - hoy) / (1000 * 60 * 60 * 24));
+      
+      let badgeClase = 'badge-green';
+      let textoSemaforo = '🟢 EN TÉRMINO';
+      if (diasRestantes < 0) {
+        badgeClase = 'badge-red';
+        textoSemaforo = '🔴 VENCIDO';
+      } else if (diasRestantes <= 3) {
+        badgeClase = 'badge-yellow';
+        textoSemaforo = '🟡 PRÓXIMO A VENCER';
+      }
+
+      if (preview) {
+        preview.innerHTML = `
+          <strong>Fecha límite calculada:</strong> ${fechaLimStr} <br>
+          <strong>Días restantes estimados:</strong> ${diasRestantes} días <br>
+          <strong>Estado del semáforo:</strong> <span class="badge ${badgeClase}">${textoSemaforo}</span>
+        `;
       }
     }
 
-    function mostrarModoEdicion() { document.getElementById('editBanner').classList.add('show'); }
-    function ocultarModoEdicion() { document.getElementById('editBanner').classList.remove('show'); }
+    function convertirFechaInput(fechaStr) {
+      if (!fechaStr) return '';
+      if (fechaStr.includes('T')) return fechaStr.split('T')[0];
+      return fechaStr;
+    }
 
-    function mostrarSeccion(seccionId, btn) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById(seccionId).classList.add('active');
-      if (btn) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
+    function mostrarSeccion(idSeccion, btnElement) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      const sec = document.getElementById(idSeccion);
+      if (sec) sec.classList.add('active');
+      if (btnElement) btnElement.classList.add('active');
+      if (idSeccion === 'seguimiento') {
+        aplicarFiltros();
       }
     }
 
     function mostrarSeccionSeguimiento() {
-      mostrarSeccion('seguimiento', document.querySelectorAll('.tab')[1]);
-      cargarRegistros();
+      const tabSeguimiento = document.querySelectorAll('.tab')[1];
+      mostrarSeccion('seguimiento', tabSeguimiento);
     }
 
     function actualizarDashboard(data) {
@@ -884,8 +632,135 @@
       document.getElementById('statVencidas').textContent = data.vencidas || 0;
     }
 
-    function actualizarDashboardDesdeRegistros() {
+    function renderizarTabla(data) {
+      registrosFiltrados = data || [];
+      const tbody = document.getElementById('tablaResultados');
+      const contador = document.getElementById('contadorResultados');
+      if (contador) contador.textContent = `(${registrosFiltrados.length})`;
+      if (!tbody) return;
+
+      if (registrosFiltrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="empty">No se encontraron registros.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      registrosFiltrados.forEach((r, idx) => {
+        let badgeClase = 'badge-green';
+        let semaforo = r['Semáforo'] || 'EN TÉRMINO';
+        if (semaforo.includes('VENCIDO')) badgeClase = 'badge-red';
+        else if (semaforo.includes('PRÓXIMO')) badgeClase = 'badge-yellow';
+        else if (semaforo.includes('RESPONDIDO')) badgeClase = 'badge-blue';
+
+        html += `
+          <tr>
+            <td>${r['Consecutivo'] || ''}</td>
+            <td><strong>${r['ID / Radicado'] || ''}</strong></td>
+            <td>${r['Fecha recepción'] || ''}</td>
+            <td>${r['Peticionario'] || ''}</td>
+            <td>${r['Documento / Identificación'] || ''}</td>
+            <td>${r['Tipo de petición'] || ''}</td>
+            <td>${r['Funcionario responsable'] || ''}</td>
+            <td>${r['Fecha límite de respuesta'] || ''}</td>
+            <td>${r['Días restantes'] !== undefined ? r['Días restantes'] : ''}</td>
+            <td><span class="badge ${badgeClase}">${semaforo}</span></td>
+            <td><span class="badge badge-gray">${r['Estado'] || ''}</span></td>
+            <td>
+              <button class="btn btn-primary btn-small" onclick="editarRegistro(${idx})">✏️ Editar</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function aplicarFiltros() {
+      const fRadicado = document.getElementById('filtroRadicado').value.toLowerCase();
+      const fDoc = document.getElementById('filtroDocumento').value.toLowerCase();
+      const fPet = document.getElementById('filtroPeticionario').value.toLowerCase();
+      const fFunc = document.getElementById('filtroFuncionario').value;
+      const fTipo = document.getElementById('filtroTipo').value;
+      const fEstado = document.getElementById('filtroEstado').value;
+      const fSemaforo = document.getElementById('filtroSemaforo').value;
+      const fDesde = document.getElementById('filtroDesde').value;
+      const fHasta = document.getElementById('filtroHasta').value;
+
+      const filtrados = registros.filter(r => {
+        const radicado = String(r['ID / Radicado'] || '').toLowerCase();
+        const doc = String(r['Documento / Identificación'] || '').toLowerCase();
+        const pet = String(r['Peticionario'] || '').toLowerCase();
+        const func = String(r['Funcionario responsable'] || '');
+        const tipo = String(r['Tipo de petición'] || '');
+        const estado = String(r['Estado'] || '');
+        const semaforo = String(r['Semáforo'] || '');
+        const fechaRec = r['Fecha recepción'] || '';
+
+        if (fRadicado && !radicado.includes(fRadicado)) return false;
+        if (fDoc && !doc.includes(fDoc)) return false;
+        if (fPet && !pet.includes(fPet)) return false;
+        if (fFunc && func !== fFunc) return false;
+        if (fTipo && tipo !== fTipo) return false;
+        if (fEstado && estado !== fEstado) return false;
+        if (fSemaforo && !semaforo.includes(fSemaforo)) return false;
+        if (fDesde && fechaRec < fDesde) return false;
+        if (fHasta && fechaRec > fHasta) return false;
+
+        return true;
+      });
+
+      renderizarTabla(filtrados);
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('filtroRadicado').value = '';
+      document.getElementById('filtroDocumento').value = '';
+      document.getElementById('filtroPeticionario').value = '';
+      document.getElementById('filtroFuncionario').value = '';
+      document.getElementById('filtroTipo').value = '';
+      document.getElementById('filtroEstado').value = '';
+      document.getElementById('filtroSemaforo').value = '';
+      document.getElementById('filtroDesde').value = '';
+      document.getElementById('filtroHasta').value = '';
+      renderizarTabla(registros);
+    }
+
+    function cargarRegistros() {
       cargarDatosIniciales();
+    }
+
+    function mostrarLoading(mostrar, texto = 'Cargando...') {
+      const el = document.getElementById('loading');
+      const txt = document.getElementById('loadingText');
+      if (txt) txt.textContent = texto;
+      if (el) {
+        if (mostrar) el.classList.add('show');
+        else el.classList.remove('show');
+      }
+    }
+
+    function ocultarLoading() {
+      mostrarLoading(false);
+    }
+
+    function mostrarToast(mensaje, tipo = 'success') {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.className = `toast ${tipo} show`;
+      toast.textContent = mensaje;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    function obtenerMensajeError(error) {
+      if (typeof error === 'string') return error;
+      if (error && error.message) return error.message;
+      return 'Ocurrió un error inesperado.';
+    }
+
+    function cerrarModal() {
+      const modal = document.getElementById('modalDetalle');
+      if (modal) modal.classList.remove('show');
     }
   </script>
 </body>
