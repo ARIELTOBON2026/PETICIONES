@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Peticiones - La Ceja</title>
+  <style>
+    :root {
+      --primary: #174ea6; --primary-dark: #123b7a; --secondary: #0f766e;
+      --success: #15803d; --warning: #b45309; --danger: #b91c1c;
+      --info: #0369a1; --dark: #172033; --gray: #64748b;
+      --light: #f1f5f9; --border: #dbe3ee; --white: #ffffff;
+      --shadow: 0 8px 25px rgba(15, 23, 42, .08); --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f7fb; color: var(--dark); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .header { background: linear-gradient(135deg, #123b7a, #174ea6); color: white; padding: 22px 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, .12); }
+    .header-content { max-width: 1450px; margin: auto; display: flex; align-items: center; gap: 18px; }
+    .logo { width: 64px; height: 64px; border-radius: 14px; background: white; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 25px; font-weight: 800; box-shadow: 0 4px 10px rgba(0, 0, 0, .12); }
+    .header h1 { margin: 0 0 5px; font-size: 25px; letter-spacing: .2px; }
+    .header p { margin: 0; opacity: .9; font-size: 14px; }
+
+    .container { max-width: 1450px; margin: 25px auto; padding: 0 20px 40px; }
+    .dashboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 22px; }
+    .card-stat { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .card-stat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--primary); }
+    .card-stat.green::before { background: var(--success); }
+    .card-stat.yellow::before { background: var(--warning); }
+    .card-stat.red::before { background: var(--danger); }
+    .card-stat.blue::before { background: var(--info); }
+    .stat-label { color: var(--gray); font-size: 13px; margin-bottom: 8px; }
+    .stat-number { font-size: 29px; font-weight: 800; }
+
+    .tabs { display: flex; background: white; border-radius: 12px; padding: 5px; box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border); }
+    .tab { border: 0; background: transparent; padding: 12px 22px; border-radius: 9px; color: var(--gray); font-weight: 700; }
+    .tab.active { background: var(--primary); color: white; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+    .panel { background: white; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+    .panel-header { padding: 17px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+    .panel-header h2 { margin: 0; font-size: 18px; }
+    .panel-body { padding: 20px; }
+
+    .edit-banner { display: none; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; font-weight: 700; }
+    .edit-banner.show { display: flex; align-items: center; justify-content: space-between; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group.span-2 { grid-column: span 2; }
+    label { font-size: 13px; font-weight: 700; margin-bottom: 7px; color: #334155; }
+    label .required { color: var(--danger); }
+    input, select, textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 9px; padding: 11px 12px; outline: none; background: white; color: #1e293b; transition: .2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23, 78, 166, .10); }
+    input[readonly] { background: #f8fafc; color: #475569; }
+    textarea { min-height: 95px; resize: vertical; }
+    .input-help { font-size: 11px; color: var(--gray); margin-top: 5px; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .btn { border: 0; border-radius: 9px; padding: 11px 18px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: .2s; }
+    .btn:hover { transform: translateY(-1px); filter: brightness(.97); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-info { background: var(--info); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-small { padding: 7px 10px; font-size: 12px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    .search-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .search-actions { display: flex; gap: 8px; align-items: end; }
+
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1150px; }
+    th { background: #f1f5f9; color: #334155; font-size: 12px; text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 11px 10px; border-bottom: 1px solid #e8edf3; font-size: 12px; vertical-align: middle; }
+    tbody tr:hover { background: #f8fafc; }
+
+    .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-gray { background: #e2e8f0; color: #475569; }
+
+    .loading { position: fixed; inset: 0; background: rgba(15, 23, 42, .48); z-index: 9999; display: none; align-items: center; justify-content: center; }
+    .loading.show { display: flex; }
+    .loading-box { background: white; border-radius: 14px; padding: 25px 35px; text-align: center; box-shadow: 0 15px 40px rgba(0, 0, 0, .2); }
+    .spinner { width: 38px; height: 38px; border: 4px solid #dbeafe; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; margin: auto auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 10000; min-width: 300px; max-width: 450px; padding: 14px 17px; border-radius: 10px; color: white; box-shadow: 0 10px 30px rgba(0, 0, 0, .18); transform: translateY(120px); opacity: 0; transition: .3s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #15803d; }
+    .toast.error { background: #b91c1c; }
+    .toast.info { background: #0369a1; }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, .55); z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
+    .modal.show { display: flex; }
+    .modal-content { width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, .25); }
+    .modal-header { padding: 17px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { margin: 0; }
+    .close { border: 0; background: transparent; font-size: 25px; color: var(--gray); }
+    .modal-body { padding: 20px; }
+    .empty { text-align: center; padding: 35px 15px; color: var(--gray); }
+
+    @media (max-width: 1150px) {
+      .dashboard { grid-template-columns: repeat(3, 1fr); }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .search-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .header { padding: 18px; }
+      .header-content { align-items: flex-start; }
+      .logo { width: 50px; height: 50px; font-size: 18px; }
+      .header h1 { font-size: 19px; }
+      .container { padding: 0 12px 30px; margin-top: 15px; }
+      .dashboard { grid-template-columns: repeat(2, 1fr); }
+      .form-grid, .search-grid { grid-template-columns: 1fr; }
+      .form-group.span-2 { grid-column: auto; }
+      .tabs { overflow-x: auto; }
+      .tab { white-space: nowrap; }
+      .panel-body { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading" id="loading">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <strong id="loadingText">Cargando información...</strong>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">SM</div>
+      <div>
+        <h1>SECRETARÍA DE MOVILIDAD - LA CEJA</h1>
+        <p>Gestión de Derechos de Petición y Solicitudes</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="dashboard">
+      <div class="card-stat"><div class="stat-label">Total registros</div><div class="stat-number" id="statTotal">0</div></div>
+      <div class="card-stat yellow"><div class="stat-label">Pendientes</div><div class="stat-number" id="statPendientes">0</div></div>
+      <div class="card-stat blue"><div class="stat-label">En trámite</div><div class="stat-number" id="statTramite">0</div></div>
+      <div class="card-stat green"><div class="stat-label">Respondidas</div><div class="stat-number" id="statRespondidas">0</div></div>
+      <div class="card-stat red"><div class="stat-label">Vencidas</div><div class="stat-number" id="statVencidas">0</div></div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab active" onclick="mostrarSeccion('registro', this)">📝 Registrar petición</button>
+      <button class="tab" onclick="mostrarSeccion('seguimiento', this)">🔎 Seguimiento</button>
+    </div>
+
+    <section id="registro" class="section active">
+      <div id="editBanner" class="edit-banner">
+        <span>✏️ MODO EDICIÓN — está modificando un registro existente.</span>
+        <button class="btn btn-warning btn-small" onclick="nuevoRegistro()">Cancelar edición</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div><h2>Información de la petición</h2></div>
+          <button class="btn btn-secondary btn-small" onclick="nuevoRegistro()">＋ Nuevo</button>
+        </div>
+        <div class="panel-body">
+          <form id="formPeticion">
+            <input type="hidden" id="fila">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Consecutivo</label>
+                <input type="text" id="consecutivo" readonly>
+                <span class="input-help">Generado automáticamente.</span>
+              </div>
+              <div class="form-group">
+                <label>ID / Radicado <span class="required">*</span></label>
+                <input type="text" id="radicado" required placeholder="Número de radicado">
+              </div>
+              <div class="form-group">
+                <label>Fecha recepción <span class="required">*</span></label>
+                <input type="date" id="fechaRecepcion" required onchange="calcularFechaLimite()">
+              </div>
+              <div class="form-group span-2">
+                <label>Peticionario <span class="required">*</span></label>
+                <input type="text" id="peticionario" required placeholder="Nombre completo">
+              </div>
+              <div class="form-group">
+                <label>Documento / Identificación</label>
+                <input type="text" id="documento" placeholder="Número de documento">
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="text" id="telefono" placeholder="Teléfono">
+              </div>
+              <div class="form-group span-2">
+                <label>Correo electrónico</label>
+                <input type="email" id="correo" placeholder="correo@ejemplo.com">
+              </div>
+              <div class="form-group">
+                <label>Tipo de petición <span class="required">*</span></label>
+                <select id="tipoPeticion" required><option value="">Seleccione...</option></select>
+              </div>
+              <div class="form-group">
+                <label>Funcionario responsable <span class="required">*</span></label>
+                <select id="funcionario" required><option value="">Seleccione...</option></select>
+              </div>
+              <div class="form-group full">
+                <label>Asunto</label>
+                <textarea id="asunto" placeholder="Descripción breve del asunto de la petición"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Término (días) <span class="required">*</span></label>
+                <input type="number" id="termino" min="0" value="15" required onchange="calcularFechaLimite()">
+                <span class="input-help">Días calendario.</span>
+              </div>
+              <div class="form-group">
+                <label>Fecha límite de respuesta</label>
+                <input type="date" id="fechaLimite" readonly>
+              </div>
+              <div class="form-group">
+                <label>Estado</label>
+                <select id="estado">
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="EN TRÁMITE">EN TRÁMITE</option>
+                  <option value="RESPONDIDO">RESPONDIDO</option>
+                  <option value="CERRADO">CERRADO</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fecha de respuesta</label>
+                <input type="date" id="fechaRespuesta">
+              </div>
+              <div class="form-group">
+                <label>Medio de respuesta</label>
+                <select id="medioRespuesta"><option value="">Seleccione...</option></select>
+              </div>
+              <div class="form-group full">
+                <label>Observaciones</label>
+                <textarea id="observaciones" placeholder="Observaciones, actuaciones o información adicional"></textarea>
+              </div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-success" onclick="guardar()">💾 Guardar registro</button>
+              <button type="button" class="btn btn-primary" onclick="mostrarSeccionSeguimiento()">🔎 Ir a seguimiento</button>
+              <button type="button" class="btn btn-secondary" onclick="nuevoRegistro()">🧹 Limpiar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h2>Estado del seguimiento</h2></div>
+        <div class="panel-body">
+          <div id="previewSeguimiento" class="empty">Complete la fecha de recepción y el término para visualizar la fecha límite.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="seguimiento" class="section">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Buscar y consultar peticiones</h2>
+          <button class="btn btn-secondary btn-small" onclick="cargarRegistros()">↻ Actualizar</button>
+        </div>
+        <div class="panel-body">
+          <div class="search-grid">
+            <div class="form-group"><label>ID / Radicado</label><input type="text" id="filtroRadicado" placeholder="Buscar radicado" oninput="aplicarFiltros()"></div>
+            <div class="form-group"><label>Documento</label><input type="text" id="filtroDocumento" placeholder="Documento" oninput="aplicarFiltros()"></div>
+            <div class="form-group"><label>Peticionario</label><input type="text" id="filtroPeticionario" placeholder="Nombre" oninput="aplicarFiltros()"></div>
+            <div class="form-group"><label>Funcionario</label><select id="filtroFuncionario" onchange="aplicarFiltros()"><option value="">Todos</option></select></div>
+            <div class="form-group"><label>Tipo de petición</label><select id="filtroTipo" onchange="aplicarFiltros()"><option value="">Todos</option></select></div>
+            <div class="form-group"><label>Estado</label><select id="filtroEstado" onchange="aplicarFiltros()"><option value="">Todos</option><option value="PENDIENTE">PENDIENTE</option><option value="EN TRÁMITE">EN TRÁMITE</option><option value="RESPONDIDO">RESPONDIDO</option><option value="CERRADO">CERRADO</option></select></div>
+            <div class="form-group"><label>Semáforo</label><select id="filtroSemaforo" onchange="aplicarFiltros()"><option value="">Todos</option><option value="EN TÉRMINO">🟢 EN TÉRMINO</option><option value="PRÓXIMO A VENCER">🟡 PRÓXIMO A VENCER</option><option value="VENCIDO">🔴 VENCIDO</option><option value="RESPONDIDO">🔵 RESPONDIDO</option></select></div>
+            <div class="form-group"><label>Desde</label><input type="date" id="filtroDesde" onchange="aplicarFiltros()"></div>
+            <div class="form-group"><label>Hasta</label><input type="date" id="filtroHasta" onchange="aplicarFiltros()"></div>
+            <div class="search-actions"><button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar filtros</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h2>Resultados <span id="contadorResultados"></span></h2></div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Consecutivo</th><th>Radicado</th><th>Recepción</th><th>Peticionario</th><th>Documento</th><th>Tipo</th>
+                <th>Funcionario</th><th>Fecha límite</th><th>Días restantes</th><th>Semáforo</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaResultados"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="modalDetalle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Detalle de la petición</h3>
+        <button class="close" onclick="cerrarModal()">×</button>
+      </div>
+      <div class="modal-body" id="detalleContenido"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ========================================================
+    // CONFIGURACIÓN DUAL: Google Apps Script O GitHub Pages
+    // ========================================================
+    const isGAS = typeof google !== 'undefined' && google.script;
+
+    // Función wrapper para manejar llamadas al backend (Real o Simulado)
+    function callBackend(method, payload, successCallback, failureCallback) {
+      if (isGAS) {
+        google.script.run
+          .withSuccessHandler(successCallback)
+          .withFailureHandler(failureCallback)[method](payload);
+      } else {
+        // Modo Simulación para GitHub Pages (usa localStorage)
+        setTimeout(() => {
+          try {
+            const result = mockBackend[method](payload);
+            successCallback(result);
+          } catch (error) {
+            failureCallback(error);
+          }
+        }, 400); // Simula latencia de red
+      }
+    }
+
+    // Backend Simulado (Solo se usa si NO está en Google Apps Script)
+    const mockBackend = {
+      obtenerDatosIniciales: () => {
+        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
+        return {
+          tipos: ['Derecho de Petición', 'Queja', 'Reclamo', 'Solicitud', 'Consulta'],
+          funcionarios: ['Juan Pérez', 'María Gómez', 'Carlos López', 'Ana Rodríguez'],
+          estados: ['PENDIENTE', 'EN TRÁMITE', 'RESPONDIDO', 'CERRADO'],
+          mediosRespuesta: ['Correo electrónico', 'Oficio', 'Presencial', 'Notificación'],
+          registros: registros,
+          dashboard: calcularDashboardMock(registros)
+        };
+      },
+      obtenerSiguienteConsecutivo: () => {
+        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
+        if (registros.length === 0) return 1;
+        const max = Math.max(...registros.map(r => parseInt(r['Consecutivo']) || 0));
+        return max + 1;
+      },
+      guardarPeticion: (datos) => {
+        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
+        const consecutivo = mockBackend.obtenerSiguienteConsecutivo();
+        const nuevo = procesarRegistroMock(datos, consecutivo);
+        nuevo.fila = registros.length + 2;
+        registros.push(nuevo);
+        localStorage.setItem('sm_registros', JSON.stringify(registros));
+        return { ok: true, mensaje: 'Registro guardado correctamente (Modo Demo)', consecutivo };
+      },
+      actualizarPeticion: (datos) => {
+        const registros = JSON.parse(localStorage.getItem('sm_registros') || '[]');
+        const index = registros.findIndex(r => r.fila == datos.fila);
+        if (index !== -1) {
+          registros[index] = procesarRegistroMock(datos, datos.consecutivo);
+          localStorage.setItem('sm_registros', JSON.stringify(registros));
+          return { ok: true, mensaje: 'Registro actualizado correctamente (Modo Demo)', consecutivo: datos.consecutivo };
+        }
+        throw new Error('Registro no encontrado');
+      },
+      listarRegistros: () => {
+        return JSON.parse(localStorage.getItem('sm_registros') || '[]');
+      }
+    };
+
+    function procesarRegistroMock(datos, consecutivo) {
+      const hoy = new Date();
+      const fechaRecepcion = new Date(datos.fechaRecepcion + 'T12:00:00');
+      const fechaLimite = new Date(fechaRecepcion);
+      fechaLimite.setDate(fechaLimite.getDate() + parseInt(datos.termino || 15));
+      
+      const diasRestantes = datos.fechaRespuesta ? 0 : Math.ceil((fechaLimite - hoy) / (1000 * 60 * 60 * 24));
+      let semaforo = 'EN TÉRMINO';
+      if (datos.fechaRespuesta) semaforo = 'RESPONDIDO';
+      else if (diasRestantes < 0) semaforo = 'VENCIDO';
+      else if (diasRestantes <= 3) semaforo = 'PRÓXIMO A VENCER';
+
+      return {
+        fila: datos.fila || 0,
+        'Consecutivo': String(consecutivo),
+        'ID / Radicado': datos.radicado,
+        'Fecha recepción': datos.fechaRecepcion,
+        'Peticionario': datos.peticionario,
+        'Documento / Identificación': datos.documento,
+        'Teléfono': datos.telefono,
+        'Correo': datos.correo,
+        'Tipo de petición': datos.tipoPeticion,
+        'Asunto': datos.asunto,
+        'Funcionario responsable': datos.funcionario,
+        'Término (días)': datos.termino,
+        'Fecha límite de respuesta': fechaLimite.toISOString().split('T')[0],
+        'Días transcurridos': Math.max(0, Math.ceil((hoy - fechaRecepcion) / (1000 * 60 * 60 * 24))),
+        'Días restantes': diasRestantes,
+        'Semáforo': semaforo,
+        'Estado': datos.estado || 'PENDIENTE',
+        'Fecha de respuesta': datos.fechaRespuesta || '',
+        'Medio de respuesta': datos.medioRespuesta || '',
+        'Días utilizados': datos.fechaRespuesta ? Math.ceil((new Date(datos.fechaRespuesta + 'T12:00:00') - fechaRecepcion) / (1000 * 60 * 60 * 24)) : '',
+        'Cumplimiento': datos.fechaRespuesta ? 'CUMPLIDO' : 'PENDIENTE',
+        'Observaciones': datos.observaciones
+      };
+    }
+
+    function calcularDashboardMock(registros) {
+      let pendientes = 0, enTramite = 0, respondidas = 0, vencidas = 0;
+      registros.forEach(r => {
+        if (r['Estado'] === 'PENDIENTE') pendientes++;
+        if (r['Estado'] === 'EN TRÁMITE') enTramite++;
+        if (r['Estado'] === 'RESPONDIDO' || r['Estado'] === 'CERRADO') respondidas++;
+        if (r['Semáforo'] === 'VENCIDO') vencidas++;
+      });
+      return { total: registros.length, pendientes, enTramite, respondidas, vencidas };
+    }
+
+    // ========================================================
+    // LÓGICA DE LA APLICACIÓN
+    // ========================================================
+    let registros = [];
+    let registrosFiltrados = [];
+    let tipos = [], funcionarios = [], estados = [], mediosRespuesta = [];
+    let editando = false;
+    let guardando = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      establecerFechaHoy();
+      cargarDatosIniciales();
+    });
+
+    function cargarDatosIniciales() {
+      mostrarLoading(true, 'Cargando información...');
+      callBackend('obtenerDatosIniciales', null,
+        function (data) {
+          ocultarLoading();
+          if (!data) { mostrarToast('No se recibieron datos del servidor.', 'error'); return; }
+          tipos = data.tipos || [];
+          funcionarios = data.funcionarios || [];
+          estados = data.estados || [];
+          mediosRespuesta = data.mediosRespuesta || [];
+          registros = data.registros || [];
+          llenarCombos();
+          actualizarDashboard(data.dashboard);
+          renderizarTabla(registros);
+          obtenerConsecutivo();
+          calcularFechaLimite();
+        },
+        function (error) {
+          ocultarLoading();
+          mostrarToast(obtenerMensajeError(error), 'error');
+        }
+      );
+    }
+
+    function obtenerConsecutivo() {
+      if (editando) return;
+      callBackend('obtenerSiguienteConsecutivo', null,
+        function (numero) {
+          if (!editando) document.getElementById('consecutivo').value = numero;
+        },
+        function (error) { mostrarToast(obtenerMensajeError(error), 'error'); }
+      );
+    }
+
+    function llenarCombos() {
+      const llenar = (id, datos) => {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="">Seleccione...</option>';
+        datos.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item; opt.textContent = item;
+          el.appendChild(opt);
+        });
+      };
+      llenar('tipoPeticion', tipos);
+      llenar('funcionario', funcionarios);
+      llenar('medioRespuesta', mediosRespuesta);
+      
+      const llenarFiltro = (id, datos) => {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="">Todos</option>';
+        datos.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item; opt.textContent = item;
+          el.appendChild(opt);
+        });
+      };
+      llenarFiltro('filtroFuncionario', funcionarios);
+      llenarFiltro('filtroTipo', tipos);
+    }
+
+    function guardar() {
+      if (guardando) {
+        mostrarToast('Procesando solicitud, por favor espere...', 'info');
+        return;
+      }
+
+      const datos = obtenerDatosFormulario();
+      if (!validarFormulario(datos)) return;
+
+      guardando = true;
+      const btnGuardar = document.querySelector('.btn-success');
+      const textoOriginal = btnGuardar ? btnGuardar.innerHTML : '';
+      
+      if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '⏳ Procesando...';
+      }
+
+      mostrarLoading(true, editando ? 'Actualizando registro...' : 'Guardando registro...');
+
+      const finalizarProceso = function() {
+        guardando = false;
+        if (btnGuardar) {
+          btnGuardar.disabled = false;
+          btnGuardar.innerHTML = textoOriginal || '💾 Guardar registro';
+        }
+      };
+
+      const metodo = editando ? 'actualizarPeticion' : 'guardarPeticion';
+
+      callBackend(metodo, datos,
+        function(respuesta) {
+          finalizarProceso();
+          ocultarLoading();
+          mostrarToast(respuesta.mensaje || 'Registro procesado correctamente.', 'success');
+          cargarDatosDespuesGuardar();
+        },
+        function(error) {
+          finalizarProceso();
+          ocultarLoading();
+          mostrarToast(obtenerMensajeError(error), 'error');
+        }
+      );
+    }
+
+    function obtenerDatosFormulario() {
+      return {
+        fila: document.getElementById('fila').value,
+        consecutivo: document.getElementById('consecutivo').value,
+        radicado: document.getElementById('radicado').value.trim(),
+        fechaRecepcion: document.getElementById('fechaRecepcion').value,
+        peticionario: document.getElementById('peticionario').value.trim(),
+        documento: document.getElementById('documento').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        correo: document.getElementById('correo').value.trim(),
+        tipoPeticion: document.getElementById('tipoPeticion').value,
+        asunto: document.getElementById('asunto').value.trim(),
+        funcionario: document.getElementById('funcionario').value,
+        termino: document.getElementById('termino').value,
+        estado: document.getElementById('estado').value,
+        fechaRespuesta: document.getElementById('fechaRespuesta').value,
+        medioRespuesta: document.getElementById('medioRespuesta').value,
+        observaciones: document.getElementById('observaciones').value.trim()
+      };
+    }
+
+    function validarFormulario(datos) {
+      if (!datos.radicado) { mostrarToast('Ingrese el ID / Radicado.', 'error'); document.getElementById('radicado').focus(); return false; }
+      if (!datos.fechaRecepcion) { mostrarToast('Seleccione la fecha de recepción.', 'error'); return false; }
+      if (!datos.peticionario) { mostrarToast('Ingrese el nombre del peticionario.', 'error'); return false; }
+      if (!datos.tipoPeticion) { mostrarToast('Seleccione el tipo de petición.', 'error'); return false; }
+      if (!datos.funcionario) { mostrarToast('Seleccione el funcionario responsable.', 'error'); return false; }
+      if (datos.termino === '' || Number(datos.termino) < 0) { mostrarToast('Ingrese un término válido.', 'error'); return false; }
+      return true;
+    }
+
+    function cargarDatosDespuesGuardar() {
+      editando = false;
+      ocultarModoEdicion();
+      nuevoRegistro(false);
+      cargarDatosIniciales();
+    }
+
+    function nuevoRegistro(mostrarMensaje = true) {
+      editando = false;
+      document.getElementById('formPeticion').reset();
+      document.getElementById('fila').value = '';
+      establecerFechaHoy();
+      ocultarModoEdicion();
+      obtenerConsecutivo();
+      calcularFechaLimite();
+      if (mostrarMensaje) mostrarToast('Formulario listo para un nuevo registro.', 'info');
+    }
+
+    function editarRegistro(indice) {
+      const registro = registrosFiltrados[indice];
+      if (!registro) return;
+      editando = true;
+      document.getElementById('fila').value = registro.fila || '';
+      document.getElementById('consecutivo').value = registro['Consecutivo'] || '';
+      document.getElementById('radicado').value = registro['ID / Radicado'] || '';
+      document.getElementById('fechaRecepcion').value = convertirFechaInput(registro['Fecha recepción']);
+      document.getElementById('peticionario').value = registro['Peticionario'] || '';
+      document.getElementById('documento').value = registro['Documento / Identificación'] || '';
+      document.getElementById('telefono').value = registro['Teléfono'] || '';
+      document.getElementById('correo').value = registro['Correo'] || '';
+      document.getElementById('tipoPeticion').value = registro['Tipo de petición'] || '';
+      document.getElementById('asunto').value = registro['Asunto'] || '';
+      document.getElementById('funcionario').value = registro['Funcionario responsable'] || '';
+      document.getElementById('termino').value = registro['Término (días)'] || '';
+      document.getElementById('fechaLimite').value = convertirFechaInput(registro['Fecha límite de respuesta']);
+      document.getElementById('estado').value = registro['Estado'] || 'PENDIENTE';
+      document.getElementById('fechaRespuesta').value = convertirFechaInput(registro['Fecha de respuesta']);
+      document.getElementById('medioRespuesta').value = registro['Medio de respuesta'] || '';
+      document.getElementById('observaciones').value = registro['Observaciones'] || '';
+      mostrarModoEdicion();
+      calcularFechaLimite();
+      mostrarSeccion('registro', document.querySelector('.tab'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      mostrarToast('Registro cargado para edición.', 'info');
+    }
+
+    function verDetalle(indice) {
+      const registro = registrosFiltrados[indice];
+      if (!registro) return;
+      const campos = [
+        ['Consecutivo', 'Consecutivo'], ['ID / Radicado', 'ID / Radicado'], ['Fecha recepción', 'Fecha recepción'],
+        ['Peticionario', 'Peticionario'], ['Documento / Identificación', 'Documento'], ['Teléfono', 'Teléfono'],
+        ['Correo', 'Correo'], ['Tipo de petición', 'Tipo de petición'], ['Asunto', 'Asunto'],
+        ['Funcionario responsable', 'Funcionario responsable'], ['Término (días)', 'Término'],
+        ['Fecha límite de respuesta', 'Fecha límite'], ['Días transcurridos', 'Días transcurridos'],
+        ['Días restantes', 'Días restantes'], ['Semáforo', 'Semáforo'], ['Estado', 'Estado'],
+        ['Fecha de respuesta', 'Fecha de respuesta'], ['Medio de respuesta', 'Medio de respuesta'],
+        ['Días utilizados', 'Días utilizados'], ['Cumplimiento', 'Cumplimiento'], ['Observaciones', 'Observaciones']
+      ];
+      let html = '<div class="form-grid">';
+      campos.forEach(function (campo) {
+        let valor = registro[campo[0]] || '';
+        let clase = 'form-group';
+        if (campo[0] === 'Asunto' || campo[0] === 'Observaciones') clase += ' span-2';
+        if (campo[0] === 'Semáforo') valor = obtenerBadgeSemaforo(valor);
+        html += '<div class="' + clase + '"><label>' + escaparHTML(campo[1]) + '</label><div>' + (campo[0] === 'Semáforo' ? valor : escaparHTML(valor)) + '</div></div>';
+      });
+      html += '</div>';
+      html += '<div class="actions"><button class="btn btn-primary" onclick="cerrarModal(); editarRegistro(' + indice + ')">✏️ Editar registro</button></div>';
+      document.getElementById('detalleContenido').innerHTML = html;
+      document.getElementById('modalDetalle').classList.add('show');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalDetalle').classList.remove('show');
+    }
+
+    function cargarRegistros() {
+      mostrarLoading(true, 'Actualizando registros...');
+      callBackend('listarRegistros', null,
+        function (data) {
+          ocultarLoading();
+          registros = data || [];
+          aplicarFiltros();
+          actualizarDashboardDesdeRegistros();
+          mostrarToast('Información actualizada.', 'success');
+        },
+        function (error) {
+          ocultarLoading();
+          mostrarToast(obtenerMensajeError(error), 'error');
+        }
+      );
+    }
+
+    function aplicarFiltros() {
+      const radicado = valorInput('filtroRadicado').toLowerCase();
+      const documento = valorInput('filtroDocumento').toLowerCase();
+      const peticionario = valorInput('filtroPeticionario').toLowerCase();
+      const funcionario = valorInput('filtroFuncionario').toLowerCase();
+      const tipo = valorInput('filtroTipo').toLowerCase();
+      const estado = valorInput('filtroEstado').toLowerCase();
+      const semaforo = valorInput('filtroSemaforo').toLowerCase();
+      const desde = valorInput('filtroDesde');
+      const hasta = valorInput('filtroHasta');
+
+      registrosFiltrados = registros.filter(function (r) {
+        if (radicado && !String(r['ID / Radicado'] || '').toLowerCase().includes(radicado)) return false;
+        if (documento && !String(r['Documento / Identificación'] || '').toLowerCase().includes(documento)) return false;
+        if (peticionario && !String(r['Peticionario'] || '').toLowerCase().includes(peticionario)) return false;
+        if (funcionario && String(r['Funcionario responsable'] || '').toLowerCase() !== funcionario) return false;
+        if (tipo && String(r['Tipo de petición'] || '').toLowerCase() !== tipo) return false;
+        if (estado && String(r['Estado'] || '').toLowerCase() !== estado) return false;
+        if (semaforo && String(r['Semáforo'] || '').toLowerCase() !== semaforo) return false;
+        
+        const fecha = convertirFechaInput(r['Fecha recepción']);
+        if (desde && (!fecha || fecha < desde)) return false;
+        if (hasta && (!fecha || fecha > hasta)) return false;
+        return true;
+      });
+      renderizarTabla(registrosFiltrados);
+    }
+
+    function limpiarFiltros() {
+      ['filtroRadicado', 'filtroDocumento', 'filtroPeticionario', 'filtroDesde', 'filtroHasta'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('filtroFuncionario').value = '';
+      document.getElementById('filtroTipo').value = '';
+      document.getElementById('filtroEstado').value = '';
+      document.getElementById('filtroSemaforo').value = '';
+      aplicarFiltros();
+    }
+
+    function renderizarTabla(lista) {
+      const tbody = document.getElementById('tablaResultados');
+      tbody.innerHTML = '';
+      document.getElementById('contadorResultados').textContent = '(' + lista.length + ')';
+
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="12"><div class="empty">No se encontraron registros.</div></td></tr>';
+        return;
+      }
+
+      lista.forEach(function (r, indice) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + escaparHTML(r['Consecutivo'] || '') + '</strong></td>' +
+          '<td>' + escaparHTML(r['ID / Radicado'] || '') + '</td>' +
+          '<td>' + formatearFechaVisible(r['Fecha recepción']) + '</td>' +
+          '<td>' + escaparHTML(r['Peticionario'] || '') + '</td>' +
+          '<td>' + escaparHTML(r['Documento / Identificación'] || '') + '</td>' +
+          '<td>' + escaparHTML(r['Tipo de petición'] || '') + '</td>' +
+          '<td>' + escaparHTML(r['Funcionario responsable'] || '') + '</td>' +
+          '<td>' + formatearFechaVisible(r['Fecha límite de respuesta']) + '</td>' +
+          '<td>' + obtenerDiasRestantesHTML(r['Días restantes']) + '</td>' +
+          '<td>' + obtenerBadgeSemaforo(r['Semáforo']) + '</td>' +
+          '<td>' + obtenerBadgeEstado(r['Estado']) + '</td>' +
+          '<td>' +
+            '<button class="btn btn-info btn-small" onclick="verDetalle(' + indice + ')">👁️ Ver</button> ' +
+            '<button class="btn btn-warning btn-small" onclick="editarRegistro(' + indice + ')">✏️ Editar</button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ========================================================
+    // FUNCIONES AUXILIARES
+    // ========================================================
+
+    function obtenerBadgeSemaforo(semaforo) {
+      if (!semaforo) return '<span class="badge badge-gray">-</span>';
+      const s = String(semaforo).toUpperCase();
+      if (s.includes('VENCIDO')) return '<span class="badge badge-red">🔴 VENCIDO</span>';
+      if (s.includes('PRÓXIMO')) return '<span class="badge badge-yellow">🟡 PRÓXIMO A VENCER</span>';
+      if (s.includes('RESPONDIDO')) return '<span class="badge badge-blue">🔵 RESPONDIDO</span>';
+      return '<span class="badge badge-green">🟢 EN TÉRMINO</span>';
+    }
+
+    function obtenerBadgeEstado(estado) {
+      if (!estado) return '<span class="badge badge-gray">-</span>';
+      const e = String(estado).toUpperCase();
+      if (e === 'PENDIENTE') return '<span class="badge badge-yellow">PENDIENTE</span>';
+      if (e === 'EN TRÁMITE') return '<span class="badge badge-blue">EN TRÁMITE</span>';
+      if (e === 'RESPONDIDO') return '<span class="badge badge-green">RESPONDIDO</span>';
+      if (e === 'CERRADO') return '<span class="badge badge-gray">CERRADO</span>';
+      return '<span class="badge badge-gray">' + escaparHTML(estado) + '</span>';
+    }
+
+    function obtenerDiasRestantesHTML(dias) {
+      if (dias === '' || dias === null || dias === undefined) return '-';
+      const d = parseInt(dias, 10);
+      if (isNaN(d)) return '-';
+      if (d < 0) return '<strong style="color:var(--danger)">' + d + '</strong>';
+      if (d <= 3) return '<strong style="color:var(--warning)">' + d + '</strong>';
+      return d;
+    }
+
+    function formatearFechaVisible(fecha) {
+      if (!fecha) return '-';
+      const partes = String(fecha).split('-');
+      if (partes.length === 3) return partes[2] + '/' + partes[1] + '/' + partes[0];
+      return fecha;
+    }
+
+    function convertirFechaInput(fecha) {
+      if (!fecha) return '';
+      const partes = String(fecha).split('/');
+      if (partes.length === 3) return partes[2] + '-' + partes[1] + '-' + partes[0];
+      return fecha;
+    }
+
+    function valorInput(id) {
+      const el = document.getElementById(id);
+      return el ? el.value : '';
+    }
+
+    function escaparHTML(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function mostrarLoading(mostrar, texto = 'Cargando...') {
+      const el = document.getElementById('loading');
+      if (mostrar) {
+        document.getElementById('loadingText').textContent = texto;
+        el.classList.add('show');
+      } else {
+        el.classList.remove('show');
+      }
+    }
+
+    function ocultarLoading() { mostrarLoading(false); }
+
+    function mostrarToast(mensaje, tipo = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensaje;
+      toast.className = 'toast show ' + tipo;
+      setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+
+    function obtenerMensajeError(error) {
+      return error.message || error.toString() || 'Ocurrió un error desconocido.';
+    }
+
+    function establecerFechaHoy() {
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      const inputFecha = document.getElementById('fechaRecepcion');
+      if (inputFecha) inputFecha.value = yyyy + '-' + mm + '-' + dd;
+    }
+
+    function calcularFechaLimite() {
+      const fechaRecepcion = document.getElementById('fechaRecepcion').value;
+      const termino = parseInt(document.getElementById('termino').value, 10) || 0;
+      const preview = document.getElementById('previewSeguimiento');
+
+      if (fechaRecepcion && termino >= 0) {
+        const fecha = new Date(fechaRecepcion + 'T12:00:00');
+        fecha.setDate(fecha.getDate() + termino);
+        const yyyy = fecha.getFullYear();
+        const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dd = String(fecha.getDate()).padStart(2, '0');
+        
+        document.getElementById('fechaLimite').value = yyyy + '-' + mm + '-' + dd;
+        preview.innerHTML = '<div style="text-align:center; padding: 10px;">' +
+          '<p style="margin:0; font-size:14px; color:var(--gray);">Fecha límite calculada:</p>' +
+          '<p style="margin:5px 0 0; font-size:22px; font-weight:800; color:var(--primary);">' + dd + '/' + mm + '/' + yyyy + '</p></div>';
+      } else {
+        document.getElementById('fechaLimite').value = '';
+        preview.innerHTML = 'Complete la fecha de recepción y el término para visualizar la fecha límite.';
+      }
+    }
+
+    function mostrarModoEdicion() { document.getElementById('editBanner').classList.add('show'); }
+    function ocultarModoEdicion() { document.getElementById('editBanner').classList.remove('show'); }
+
+    function mostrarSeccion(seccionId, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(seccionId).classList.add('active');
+      if (btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    }
+
+    function mostrarSeccionSeguimiento() {
+      mostrarSeccion('seguimiento', document.querySelectorAll('.tab')[1]);
+      cargarRegistros();
+    }
+
+    function actualizarDashboard(data) {
+      if (!data) return;
+      document.getElementById('statTotal').textContent = data.total || 0;
+      document.getElementById('statPendientes').textContent = data.pendientes || 0;
+      document.getElementById('statTramite').textContent = data.enTramite || 0;
+      document.getElementById('statRespondidas').textContent = data.respondidas || 0;
+      document.getElementById('statVencidas').textContent = data.vencidas || 0;
+    }
+
+    function actualizarDashboardDesdeRegistros() {
+      cargarDatosIniciales();
+    }
+  </script>
+</body>
+</html>
