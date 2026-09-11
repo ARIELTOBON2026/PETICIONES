@@ -267,7 +267,10 @@
       <div class="panel">
         <div class="panel-header">
           <h2>Buscar y consultar peticiones</h2>
-          <button class="btn btn-secondary btn-small" onclick="cargarRegistros()">↻ Actualizar</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-danger btn-small" onclick="generarReportePDF()">📄 Generar Reporte PDF</button>
+            <button class="btn btn-secondary btn-small" onclick="cargarRegistros()">↻ Actualizar</button>
+          </div>
         </div>
         <div class="panel-body">
           <div class="search-grid">
@@ -306,7 +309,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>Detalle de la petición</h3>
-        <button class="close" onclick="cerrarModal()">×--</button>
+        <button class="close" onclick="cerrarModal()">×</button>
       </div>
       <div class="modal-body" id="detalleContenido"></div>
     </div>
@@ -316,7 +319,7 @@
 
   <script>
     // URL del despliegue oficial de Google Apps Script
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQRhGo1Zif0TxbMXc6HRogGBJQcVzuZluUyxfnK35VLBdJe0vmtHF5y-kcgDoGE10/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbycePdCaUQGxJQ6NbTX9sBu_MEO4DWC8Kq1XfbOz-NKIqsqHcer2kSt9ui3fcFusw/exec";
 
     // Conexión dinámica (Google Apps Script nativo o Fetch a Web App)
     function callBackend(method, payload, successCallback, failureCallback) {
@@ -761,6 +764,58 @@
     function cerrarModal() {
       const modal = document.getElementById('modalDetalle');
       if (modal) modal.classList.remove('show');
+    }
+
+    // ==========================================================
+    // GENERACIÓN DE REPORTES EN PDF
+    // ==========================================================
+    function generarReportePDF() {
+      mostrarLoading(true, 'Generando reporte PDF, esto puede tomar unos segundos...');
+      
+      const filtros = {
+        radicado: document.getElementById('filtroRadicado').value,
+        documento: document.getElementById('filtroDocumento').value,
+        peticionario: document.getElementById('filtroPeticionario').value,
+        funcionario: document.getElementById('filtroFuncionario').value,
+        tipo: document.getElementById('filtroTipo').value,
+        estado: document.getElementById('filtroEstado').value,
+        semaforo: document.getElementById('filtroSemaforo').value,
+        desde: document.getElementById('filtroDesde').value,
+        hasta: document.getElementById('filtroHasta').value
+      };
+
+      callBackend('generarReportePDF', filtros,
+        function(respuesta) {
+          ocultarLoading();
+          if (respuesta && respuesta.ok && respuesta.base64) {
+            mostrarToast(respuesta.mensaje || 'Reporte generado exitosamente.', 'success');
+            
+            // Convertir Base64 a Blob y forzar la descarga
+            const byteCharacters = atob(respuesta.base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = respuesta.nombre || 'reporte.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } else {
+            mostrarToast(respuesta.mensaje || 'Error al generar el reporte.', 'error');
+          }
+        },
+        function(error) {
+          ocultarLoading();
+          mostrarToast('Error al generar el PDF: ' + obtenerMensajeError(error), 'error');
+        }
+      );
     }
   </script>
 </body>
