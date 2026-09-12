@@ -70,7 +70,7 @@ main{padding:28px 0 45px}
 .form-section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #edf1f5}
 .form-section-title .number{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:7px;color:white;background:var(--azul);font-size:11px;font-weight:800;flex-shrink:0}
 .form-section-title h3{font-size:13px;font-weight:800;color:var(--gris-oscuro);text-transform:uppercase;letter-spacing:.3px}
-.form-grid{display:grid;grid-template-columns:120px 180px 145px 180px minmax(220px,1fr);gap:14px;align-items:end}
+.form-grid{display:grid;grid-template-columns:120px 175px 135px minmax(200px,1.4fr) 100px;gap:14px;align-items:end}
 .form-grid.two{grid-template-columns:repeat(2,1fr)}
 .form-grid.three{grid-template-columns:repeat(3,1fr)}
 .form-grid.four{grid-template-columns:repeat(4,1fr)}
@@ -276,7 +276,7 @@ tbody tr:last-child td{border-bottom:0}
                     <div class="field"><label class="required">Fecha recepción</label><input type="date" id="fechaRecepcion" required onchange="calcularFechaLimite()"></div>
                     <div class="field"><label class="required">Tipo de petición</label><select id="tipoPeticion" required><option value="">Seleccione...</option></select></div>
                     <div class="field"><label class="required">Término (días)</label><input type="number" id="termino" min="1" value="15" required oninput="calcularFechaLimite()"></div>
-                    <div class="field span-2"><label class="required">Asunto</label><input type="text" id="asunto" required autocomplete="off"></div>
+                    <div class="field full"><label class="required">Asunto</label><input type="text" id="asunto" required autocomplete="off"></div>
                     <div class="field"><label class="required">Fecha límite</label><input type="date" id="fechaLimite" class="fecha-limite" readonly></div>
                     <div class="field"><label class="required">Estado</label><select id="estado" required><option value="PENDIENTE">PENDIENTE</option><option value="EN TRÁMITE">EN TRÁMITE</option><option value="RESPONDIDO">RESPONDIDO</option><option value="CERRADO">CERRADO</option></select></div>
                 </div>
@@ -415,7 +415,7 @@ tbody tr:last-child td{border-bottom:0}
    ⚠️ REEMPLAZA ESTA URL CON LA DE TU WEB APP
 ========================================================= */
 const CONFIG = {
-    API_URL: "https://script.google.com/macros/s/AKfycbwpW1CD0c1BKKdkSpH-Xjuksv8wzeMikOtpH55f-GIw-E_Tnzi8k8QCEJL_61Wryso/exec",
+    API_URL: "https://script.google.com/macros/s/AKfycbxcF5HkikFfopPdPW98p5FoTLmcPPDgZk65AKgZEPRlstm-hQlRGY_t4nDNX0kTPXU/exec",
     DIAS_ALERTA: 3,
     TERMINO_POR_DEFECTO: 15,
     DEBOUNCE_MS: 400
