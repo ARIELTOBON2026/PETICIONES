@@ -1,671 +1,1773 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>
-  Gestión de Peticiones - La Ceja
-</title>
+<title>Gestión de Peticiones - La Ceja</title>
 
 <style>
 
 /* =========================================================
    VARIABLES
-   ========================================================= */
+========================================================= */
 
-:root {
-  --azul: #174ea6;
-  --azul-oscuro: #123b7a;
-  --azul-claro: #e8f0fe;
-  --verde: #188038;
-  --verde-claro: #e6f4ea;
-  --rojo: #d93025;
-  --rojo-claro: #fce8e6;
-  --amarillo: #f9ab00;
-  --amarillo-claro: #fef7e0;
-  --gris: #64748b;
-  --gris-claro: #f1f5f9;
-  --gris-borde: #d9e0e8;
-  --blanco: #ffffff;
-  --texto: #1e293b;
-  --sombra: 0 4px 15px rgba(15, 23, 42, .08);
+:root{
+    --azul:#174ea6;
+    --azul-oscuro:#0d2f68;
+    --azul-medio:#2563c7;
+    --azul-claro:#eaf2ff;
+
+    --verde:#188038;
+    --verde-oscuro:#116329;
+    --verde-claro:#e8f5ec;
+
+    --rojo:#d93025;
+    --rojo-claro:#fdeceb;
+
+    --amarillo:#f9ab00;
+    --amarillo-claro:#fff7df;
+
+    --morado:#6d4aff;
+    --morado-claro:#f0edff;
+
+    --gris:#64748b;
+    --gris-oscuro:#334155;
+    --gris-claro:#f4f7fa;
+    --gris-borde:#dce3eb;
+
+    --blanco:#ffffff;
+    --texto:#172033;
+
+    --sombra:0 8px 25px rgba(15,23,42,.08);
+    --sombra-hover:0 12px 30px rgba(15,23,42,.13);
+
+    --radio:16px;
 }
 
 /* =========================================================
-   GENERAL
-   ========================================================= */
+   RESET
+========================================================= */
 
-* {
-  box-sizing: border-box;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  background: #f8fafc;
-  color: var(--texto);
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+html{
+    scroll-behavior:smooth;
 }
 
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
-}
+body{
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Arial,
+        sans-serif;
 
-button {
-  cursor: pointer;
-}
+    background:
+        linear-gradient(
+            135deg,
+            #eef4fa 0%,
+            #f8fafc 45%,
+            #edf3f8 100%
+        );
 
-/* =========================================================
-   CONTENEDOR
-   ========================================================= */
-
-.container {
-  width: min(1450px, 96%);
-  margin: 0 auto;
-  padding: 20px 0 40px;
+    color:var(--texto);
+    min-height:100vh;
 }
 
 /* =========================================================
-   ENCABEZADO
-   ========================================================= */
+   SCROLLBAR
+========================================================= */
 
-.header {
-  background: var(--blanco);
-  border-radius: 14px;
-  padding: 22px 25px;
-  box-shadow: var(--sombra);
-  margin-bottom: 20px;
-  border-left: 6px solid var(--azul);
+::-webkit-scrollbar{
+    width:9px;
+    height:9px;
 }
 
-.header h1 {
-  margin: 0;
-  color: var(--azul);
-  font-size: 25px;
+::-webkit-scrollbar-track{
+    background:#eef2f6;
 }
 
-.header p {
-  margin: 7px 0 0;
-  color: var(--gris);
-  font-size: 14px;
+::-webkit-scrollbar-thumb{
+    background:#b9c5d3;
+    border-radius:20px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+    background:#94a3b8;
+}
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+========================================================= */
+
+.app{
+    width:100%;
+    min-height:100vh;
+}
+
+.container{
+    width:min(1500px,94%);
+    margin:auto;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.topbar{
+    position:relative;
+    overflow:hidden;
+
+    background:
+        linear-gradient(
+            120deg,
+            #0d2f68 0%,
+            #174ea6 55%,
+            #123b7a 100%
+        );
+
+    color:white;
+
+    box-shadow:
+        0 5px 20px rgba(13,47,104,.22);
+}
+
+.topbar::after{
+    content:"";
+    position:absolute;
+    width:420px;
+    height:420px;
+
+    right:-180px;
+    top:-260px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.07);
+}
+
+.topbar-inner{
+    position:relative;
+    z-index:2;
+
+    min-height:100px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:25px;
+
+    padding:18px 0;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:16px;
+}
+
+.brand-icon{
+    width:62px;
+    height:62px;
+
+    flex-shrink:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:17px;
+
+    background:white;
+    color:var(--azul);
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.15);
+}
+
+.brand-icon svg{
+    width:36px;
+    height:36px;
+}
+
+.brand-text h1{
+    font-size:22px;
+    line-height:1.2;
+    font-weight:800;
+    letter-spacing:.2px;
+}
+
+.brand-text p{
+    margin-top:5px;
+
+    font-size:12px;
+    font-weight:500;
+
+    color:#dbe8ff;
+    letter-spacing:.5px;
+}
+
+.system-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:10px 15px;
+
+    background:rgba(255,255,255,.10);
+
+    border:1px solid rgba(255,255,255,.17);
+
+    border-radius:30px;
+
+    font-size:12px;
+    font-weight:700;
+
+    white-space:nowrap;
+}
+
+.status-dot{
+    width:9px;
+    height:9px;
+
+    background:#55d97c;
+
+    border-radius:50%;
+
+    box-shadow:
+        0 0 0 4px rgba(85,217,124,.14);
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main{
+    padding:28px 0 45px;
 }
 
 /* =========================================================
    DASHBOARD
-   ========================================================= */
+========================================================= */
 
-.dashboard {
-  display: grid;
-  grid-template-columns:
-    repeat(5, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
+.dashboard{
+    display:grid;
+
+    grid-template-columns:
+        repeat(5,1fr);
+
+    gap:16px;
+
+    margin-bottom:25px;
 }
 
-.card {
-  background: var(--blanco);
-  border-radius: 12px;
-  padding: 18px;
-  box-shadow: var(--sombra);
-  border: 1px solid var(--gris-borde);
+.kpi{
+    position:relative;
+    overflow:hidden;
+
+    background:white;
+
+    border:1px solid rgba(220,227,235,.9);
+
+    border-radius:var(--radio);
+
+    padding:20px;
+
+    box-shadow:var(--sombra);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
 }
 
-.card-label {
-  color: var(--gris);
-  font-size: 13px;
-  margin-bottom: 8px;
+.kpi:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--sombra-hover);
 }
 
-.card-value {
-  font-size: 29px;
-  font-weight: bold;
-  color: var(--azul);
+.kpi::after{
+    content:"";
+
+    position:absolute;
+
+    right:-35px;
+    bottom:-45px;
+
+    width:110px;
+    height:110px;
+
+    border-radius:50%;
+
+    background:rgba(23,78,166,.035);
 }
 
-.card.vencido .card-value {
-  color: var(--rojo);
+.kpi-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    margin-bottom:13px;
 }
 
-.card.pendiente .card-value {
-  color: var(--amarillo);
+.kpi-icon{
+    width:43px;
+    height:43px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:12px;
 }
 
-.card.respondido .card-value {
-  color: var(--verde);
+.kpi-icon svg{
+    width:22px;
+    height:22px;
+}
+
+.kpi-total .kpi-icon{
+    color:var(--azul);
+    background:var(--azul-claro);
+}
+
+.kpi-pendiente .kpi-icon{
+    color:#a46a00;
+    background:var(--amarillo-claro);
+}
+
+.kpi-tramite .kpi-icon{
+    color:var(--morado);
+    background:var(--morado-claro);
+}
+
+.kpi-respondido .kpi-icon{
+    color:var(--verde);
+    background:var(--verde-claro);
+}
+
+.kpi-vencido .kpi-icon{
+    color:var(--rojo);
+    background:var(--rojo-claro);
+}
+
+.kpi-label{
+    color:var(--gris);
+
+    font-size:12px;
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+}
+
+.kpi-number{
+    font-size:30px;
+    line-height:1;
+
+    font-weight:800;
+
+    color:var(--texto);
+}
+
+/* =========================================================
+   CARD GENERAL
+========================================================= */
+
+.card{
+    background:var(--blanco);
+
+    border:1px solid var(--gris-borde);
+
+    border-radius:var(--radio);
+
+    box-shadow:var(--sombra);
+
+    margin-bottom:22px;
 }
 
 /* =========================================================
    TABS
-   ========================================================= */
+========================================================= */
 
-.tabs {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
+.tabs-card{
+    padding:8px;
 }
 
-.tab {
-  border: 0;
-  background: #e2e8f0;
-  color: #334155;
-  padding: 12px 20px;
-  border-radius: 8px 8px 0 0;
-  font-weight: bold;
+.tabs{
+    display:flex;
+    gap:8px;
 }
 
-.tab.active {
-  background: var(--azul);
-  color: white;
+.tab{
+    flex:0 0 auto;
+
+    border:0;
+    background:transparent;
+
+    color:var(--gris);
+
+    padding:13px 22px;
+
+    border-radius:11px;
+
+    font-size:14px;
+    font-weight:750;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.tab:hover{
+    color:var(--azul);
+    background:var(--azul-claro);
+}
+
+.tab.active{
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--azul),
+            var(--azul-medio)
+        );
+
+    box-shadow:
+        0 5px 12px rgba(23,78,166,.20);
 }
 
 /* =========================================================
-   SECCIONES
-   ========================================================= */
+   TAB CONTENT
+========================================================= */
 
-.section {
-  display: none;
-  background: white;
-  border-radius: 0 12px 12px 12px;
-  padding: 22px;
-  box-shadow: var(--sombra);
-  border: 1px solid var(--gris-borde);
+.tab-content{
+    display:none;
 }
 
-.section.active {
-  display: block;
+.tab-content.active{
+    display:block;
+}
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.card-header{
+    padding:22px 24px;
+
+    border-bottom:1px solid var(--gris-borde);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:20px;
+}
+
+.card-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.title-icon{
+    width:40px;
+    height:40px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:11px;
+
+    background:var(--azul-claro);
+    color:var(--azul);
+}
+
+.title-icon svg{
+    width:20px;
+    height:20px;
+}
+
+.card-title h2{
+    font-size:18px;
+    font-weight:800;
+}
+
+.card-title p{
+    color:var(--gris);
+
+    margin-top:3px;
+
+    font-size:12px;
 }
 
 /* =========================================================
    FORMULARIO
-   ========================================================= */
+========================================================= */
 
-.form-grid {
-  display: grid;
-  grid-template-columns:
-    repeat(4, minmax(180px, 1fr));
-  gap: 16px;
+.form-body{
+    padding:25px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
+.form-section{
+    margin-bottom:28px;
 }
 
-.form-group.full {
-  grid-column: 1 / -1;
+.form-section:last-child{
+    margin-bottom:0;
 }
 
-.form-group.span2 {
-  grid-column: span 2;
+.form-section-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    margin-bottom:17px;
+
+    padding-bottom:11px;
+
+    border-bottom:1px solid #edf1f5;
 }
 
-label {
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 6px;
-  color: #334155;
+.form-section-title .number{
+    width:27px;
+    height:27px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:8px;
+
+    color:white;
+
+    background:var(--azul);
+
+    font-size:12px;
+    font-weight:800;
 }
 
-.required::after {
-  content: " *";
-  color: var(--rojo);
+.form-section-title h3{
+    font-size:14px;
+    font-weight:800;
+
+    color:var(--gris-oscuro);
+
+    text-transform:uppercase;
+
+    letter-spacing:.3px;
+}
+
+.form-grid{
+    display:grid;
+
+    grid-template-columns:
+        120px
+        180px
+        145px
+        180px
+        minmax(220px,1fr);
+
+    gap:17px 15px;
+
+    align-items:end;
+}
+
+.form-grid.two{
+    grid-template-columns:
+        repeat(2,1fr);
+}
+
+.form-grid.three{
+    grid-template-columns:
+        repeat(3,1fr);
+}
+
+.form-grid.four{
+    grid-template-columns:
+        repeat(4,1fr);
+}
+
+.field{
+    min-width:0;
+}
+
+.field.full{
+    grid-column:1/-1;
+}
+
+.field.span-2{
+    grid-column:span 2;
+}
+
+.field.span-3{
+    grid-column:span 3;
+}
+
+label{
+    display:block;
+
+    margin-bottom:7px;
+
+    color:#475569;
+
+    font-size:12px;
+    font-weight:750;
+}
+
+label.required::after{
+    content:" *";
+
+    color:var(--rojo);
 }
 
 input,
 select,
-textarea {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  padding: 10px 11px;
-  font-size: 14px;
-  outline: none;
-  background: white;
+textarea{
+    width:100%;
+
+    border:1px solid #d5dde7;
+
+    background:#fbfcfe;
+
+    color:var(--texto);
+
+    border-radius:10px;
+
+    padding:11px 12px;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    outline:none;
+
+    transition:
+        border-color .18s,
+        box-shadow .18s,
+        background .18s;
+}
+
+input,
+select{
+    height:43px;
+}
+
+textarea{
+    min-height:100px;
+
+    resize:vertical;
+
+    line-height:1.5;
+}
+
+input:hover,
+select:hover,
+textarea:hover{
+    background:white;
+    border-color:#b8c5d5;
 }
 
 input:focus,
 select:focus,
-textarea:focus {
-  border-color: var(--azul);
-  box-shadow:
-    0 0 0 2px
-    rgba(23, 78, 166, .12);
+textarea:focus{
+    background:white;
+
+    border-color:var(--azul);
+
+    box-shadow:
+        0 0 0 3px rgba(23,78,166,.10);
 }
 
-input[readonly] {
-  background: #f1f5f9;
+input[readonly]{
+    background:#f1f5f9;
+    color:#64748b;
+    cursor:not-allowed;
 }
 
-textarea {
-  min-height: 95px;
-  resize: vertical;
+/* =========================================================
+   FECHA LÍMITE
+========================================================= */
+
+.fecha-limite{
+    background:#f7faff !important;
+
+    border-color:#c8d9f4 !important;
+
+    font-weight:750;
 }
 
 /* =========================================================
    BOTONES
-   ========================================================= */
+========================================================= */
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 22px;
+.form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+
+    padding-top:22px;
+    margin-top:25px;
+
+    border-top:1px solid var(--gris-borde);
 }
 
-.btn {
-  border: 0;
-  border-radius: 7px;
-  padding: 11px 17px;
-  font-weight: bold;
-  font-size: 14px;
+.btn{
+    border:0;
+
+    min-height:42px;
+
+    padding:10px 17px;
+
+    border-radius:10px;
+
+    font-family:inherit;
+
+    font-size:13px;
+    font-weight:750;
+
+    cursor:pointer;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    transition:
+        transform .15s,
+        box-shadow .15s,
+        opacity .15s;
 }
 
-.btn-primary {
-  background: var(--azul);
-  color: white;
+.btn:hover{
+    transform:translateY(-1px);
 }
 
-.btn-primary:hover {
-  background: var(--azul-oscuro);
+.btn:active{
+    transform:translateY(0);
 }
 
-.btn-success {
-  background: var(--verde);
-  color: white;
+.btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    transform:none;
 }
 
-.btn-secondary {
-  background: #64748b;
-  color: white;
+.btn svg{
+    width:17px;
+    height:17px;
 }
 
-.btn-danger {
-  background: var(--rojo);
-  color: white;
+.btn-primary{
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--azul),
+            var(--azul-medio)
+        );
+
+    box-shadow:
+        0 5px 13px rgba(23,78,166,.20);
 }
 
-.btn-light {
-  background: #e2e8f0;
-  color: #334155;
+.btn-success{
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--verde),
+            #229447
+        );
+
+    box-shadow:
+        0 5px 13px rgba(24,128,56,.18);
 }
 
-.btn-small {
-  padding: 7px 10px;
-  font-size: 12px;
+.btn-secondary{
+    color:#475569;
+    background:#eef2f6;
+}
+
+.btn-danger{
+    color:white;
+    background:var(--rojo);
+}
+
+.btn-outline{
+    color:var(--azul);
+
+    background:white;
+
+    border:1px solid #c8d7ed;
+}
+
+.btn-sm{
+    min-height:34px;
+
+    padding:7px 10px;
+
+    border-radius:8px;
+
+    font-size:11px;
 }
 
 /* =========================================================
-   MODO EDICIÓN
-   ========================================================= */
+   SEGUIMIENTO / FILTROS
+========================================================= */
 
-.editing {
-  background: var(--amarillo-claro);
-  border: 1px solid #f6c453;
-  border-radius: 8px;
-  padding: 12px 15px;
-  margin-bottom: 18px;
-  color: #7a4d00;
-  font-size: 13px;
-  font-weight: bold;
+.filter-panel{
+    padding:20px 24px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f8fafc,
+            #ffffff
+        );
+
+    border-bottom:1px solid var(--gris-borde);
 }
 
-.hidden {
-  display: none !important;
+.filter-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    margin-bottom:15px;
+
+    font-size:13px;
+    font-weight:800;
+
+    color:var(--gris-oscuro);
 }
 
-/* =========================================================
-   FILTROS
-   ========================================================= */
+.filter-title svg{
+    width:18px;
+    height:18px;
 
-.filters {
-  display: grid;
-  grid-template-columns:
-    repeat(4, minmax(170px, 1fr));
-  gap: 13px;
-  margin-bottom: 20px;
+    color:var(--azul);
 }
 
-.filter-actions {
-  display: flex;
-  gap: 8px;
-  align-items: end;
+.filters{
+    display:grid;
+
+    grid-template-columns:
+        1.1fr
+        1.1fr
+        1.2fr
+        1fr
+        1fr
+        1fr
+        1fr
+        120px
+        120px;
+
+    gap:10px;
+}
+
+.filter-field label{
+    font-size:10px;
+
+    margin-bottom:5px;
+
+    text-transform:uppercase;
+
+    color:#718096;
+}
+
+.filter-field input,
+.filter-field select{
+    height:39px;
+
+    padding:8px 10px;
+
+    font-size:12px;
+}
+
+.filter-actions{
+    display:flex;
+    align-items:end;
 }
 
 /* =========================================================
    TABLA
-   ========================================================= */
+========================================================= */
 
-.table-wrapper {
-  overflow-x: auto;
-  border: 1px solid var(--gris-borde);
-  border-radius: 9px;
+.table-wrapper{
+    width:100%;
+
+    overflow:auto;
+
+    border-radius:0 0 var(--radio) var(--radio);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1250px;
+table{
+    width:100%;
+
+    border-collapse:separate;
+    border-spacing:0;
+
+    min-width:1250px;
 }
 
-thead {
-  background: #e8eef7;
+thead th{
+    position:sticky;
+    top:0;
+    z-index:2;
+
+    background:#f1f5f9;
+
+    color:#475569;
+
+    border-bottom:1px solid #dbe3ec;
+
+    padding:13px 11px;
+
+    text-align:left;
+
+    font-size:10px;
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.4px;
+
+    white-space:nowrap;
 }
 
-th,
-td {
-  padding: 10px 9px;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  font-size: 12px;
-  vertical-align: middle;
+tbody td{
+    padding:13px 11px;
+
+    border-bottom:1px solid #edf1f5;
+
+    font-size:12px;
+
+    color:#334155;
+
+    vertical-align:middle;
 }
 
-th {
-  color: #334155;
-  font-weight: bold;
-  white-space: nowrap;
+tbody tr{
+    transition:background .15s;
 }
 
-tbody tr:hover {
-  background: #f8fafc;
+tbody tr:hover{
+    background:#f8fbff;
+}
+
+tbody tr:last-child td{
+    border-bottom:0;
 }
 
 /* =========================================================
-   SEMÁFOROS
-   ========================================================= */
+   BADGES
+========================================================= */
 
-.badge {
-  display: inline-block;
-  padding: 5px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: bold;
-  white-space: nowrap;
+.badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-width:80px;
+
+    padding:5px 9px;
+
+    border-radius:20px;
+
+    font-size:9px;
+    font-weight:800;
+
+    text-transform:uppercase;
+
+    letter-spacing:.3px;
 }
 
-.badge-vencido {
-  background: var(--rojo-claro);
-  color: var(--rojo);
+.badge-pendiente{
+    color:#936000;
+    background:#fff4d4;
 }
 
-.badge-proximo {
-  background: var(--amarillo-claro);
-  color: #9a6700;
+.badge-tramite{
+    color:#5d43c5;
+    background:#eeeaff;
 }
 
-.badge-termino {
-  background: var(--verde-claro);
-  color: var(--verde);
+.badge-respondido,
+.badge-cerrado{
+    color:#16713a;
+    background:#e6f5eb;
 }
 
-.badge-respondido {
-  background: var(--azul-claro);
-  color: var(--azul);
+.badge-vencido{
+    color:#b42318;
+    background:#fde9e7;
 }
 
-.badge-estado {
-  background: #e2e8f0;
-  color: #334155;
+.badge-tiempo{
+    color:#16713a;
+    background:#e7f6eb;
+}
+
+.badge-por-vencer{
+    color:#996600;
+    background:#fff4d5;
+}
+
+/* =========================================================
+   SEMÁFORO
+========================================================= */
+
+.semaforo{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    font-size:10px;
+    font-weight:800;
+
+    white-space:nowrap;
+}
+
+.semaforo::before{
+    content:"";
+
+    width:9px;
+    height:9px;
+
+    border-radius:50%;
+}
+
+.semaforo.verde{
+    color:var(--verde);
+}
+
+.semaforo.verde::before{
+    background:var(--verde);
+    box-shadow:0 0 0 3px var(--verde-claro);
+}
+
+.semaforo.amarillo{
+    color:#9a6700;
+}
+
+.semaforo.amarillo::before{
+    background:var(--amarillo);
+    box-shadow:0 0 0 3px var(--amarillo-claro);
+}
+
+.semaforo.rojo{
+    color:var(--rojo);
+}
+
+.semaforo.rojo::before{
+    background:var(--rojo);
+    box-shadow:0 0 0 3px var(--rojo-claro);
+}
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.action-btn{
+    width:32px;
+    height:32px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid #dce3eb;
+
+    background:white;
+
+    color:#64748b;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    transition:.15s;
+}
+
+.action-btn:hover{
+    color:var(--azul);
+    border-color:#bdd0ea;
+    background:var(--azul-claro);
+}
+
+.action-btn svg{
+    width:15px;
+    height:15px;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state{
+    padding:55px 20px;
+
+    text-align:center;
+
+    color:var(--gris);
+}
+
+.empty-icon{
+    width:55px;
+    height:55px;
+
+    margin:0 auto 12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:#f1f5f9;
+
+    color:#94a3b8;
+}
+
+.empty-icon svg{
+    width:25px;
+    height:25px;
+}
+
+.empty-state h3{
+    font-size:14px;
+    color:#475569;
+
+    margin-bottom:5px;
+}
+
+.empty-state p{
+    font-size:12px;
 }
 
 /* =========================================================
    MODAL
-   ========================================================= */
+========================================================= */
 
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, .60);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+.modal{
+    position:fixed;
+
+    inset:0;
+
+    z-index:1000;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+    background:rgba(15,23,42,.62);
+
+    backdrop-filter:blur(5px);
 }
 
-.modal.show {
-  display: flex;
+.modal.show{
+    display:flex;
+
+    animation:fadeIn .18s ease;
 }
 
-.modal-content {
-  background: white;
-  width: min(850px, 100%);
-  max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+.modal-content{
+    width:min(850px,100%);
+    max-height:90vh;
+
+    overflow:hidden;
+
+    background:white;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.25);
+
+    animation:modalIn .2s ease;
 }
 
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.modal-header{
+    padding:18px 22px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--azul-oscuro),
+            var(--azul)
+        );
+
+    color:white;
 }
 
-.modal-header h2 {
-  margin: 0;
-  color: var(--azul);
-  font-size: 19px;
+.modal-header h2{
+    font-size:17px;
 }
 
-.modal-body {
-  padding: 20px;
+.modal-close{
+    width:34px;
+    height:34px;
+
+    border:0;
+
+    border-radius:9px;
+
+    background:rgba(255,255,255,.12);
+
+    color:white;
+
+    cursor:pointer;
+
+    font-size:20px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
-.modal-footer {
-  padding: 14px 20px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.modal-close:hover{
+    background:rgba(255,255,255,.2);
 }
 
-.close {
-  border: 0;
-  background: transparent;
-  font-size: 24px;
-  color: #64748b;
+.modal-body{
+    padding:22px;
+
+    overflow:auto;
+
+    max-height:calc(90vh - 130px);
+}
+
+.modal-footer{
+    padding:15px 22px;
+
+    border-top:1px solid var(--gris-borde);
+
+    display:flex;
+    justify-content:flex-end;
+    gap:9px;
 }
 
 /* =========================================================
    DETALLE
-   ========================================================= */
+========================================================= */
 
-.detalle-grid {
-  display: grid;
-  grid-template-columns:
-    repeat(2, minmax(200px, 1fr));
-  gap: 12px;
+.detail-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:12px;
 }
 
-.detalle-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 7px;
-  padding: 10px;
-  background: #f8fafc;
+.detail-item{
+    padding:13px;
+
+    border:1px solid #e4e9ef;
+
+    border-radius:10px;
+
+    background:#f8fafc;
 }
 
-.detalle-item.full {
-  grid-column: 1 / -1;
+.detail-item.full{
+    grid-column:1/-1;
 }
 
-.detalle-label {
-  display: block;
-  font-size: 11px;
-  color: #64748b;
-  font-weight: bold;
-  margin-bottom: 4px;
+.detail-label{
+    margin-bottom:5px;
+
+    color:#7b8796;
+
+    font-size:10px;
+    font-weight:800;
+
+    text-transform:uppercase;
 }
 
-.detalle-value {
-  font-size: 14px;
-  white-space: pre-wrap;
-  word-break: break-word;
+.detail-value{
+    color:#253044;
+
+    font-size:13px;
+    font-weight:600;
+
+    word-break:break-word;
 }
 
 /* =========================================================
    PDF
-   ========================================================= */
+========================================================= */
 
-.pdf-modal .modal-content {
-  width: min(1200px, 100%);
-  height: 90vh;
+.pdf-modal .modal-content{
+    width:min(1100px,96vw);
+    height:92vh;
 }
 
-.pdf-body {
-  height: calc(90vh - 120px);
-  padding: 0;
+.pdf-body{
+    height:calc(92vh - 130px);
+
+    padding:0;
+
+    background:#525a65;
 }
 
-#pdfFrame {
-  width: 100%;
-  height: 100%;
-  border: 0;
+#pdfViewer{
+    width:100%;
+    height:100%;
+
+    border:0;
 }
 
 /* =========================================================
    LOADING
-   ========================================================= */
+========================================================= */
 
-.loading {
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,.78);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+.loading-overlay{
+    position:fixed;
+
+    inset:0;
+
+    z-index:5000;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(255,255,255,.76);
+
+    backdrop-filter:blur(4px);
 }
 
-.loading.show {
-  display: flex;
+.loading-overlay.show{
+    display:flex;
 }
 
-.loading-box {
-  background: white;
-  padding: 22px 28px;
-  border-radius: 10px;
-  box-shadow: var(--sombra);
-  text-align: center;
+.loading-box{
+    min-width:220px;
+
+    padding:25px;
+
+    text-align:center;
+
+    background:white;
+
+    border-radius:15px;
+
+    box-shadow:
+        0 15px 50px rgba(15,23,42,.18);
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 4px solid #dbe5f1;
-  border-top-color: var(--azul);
-  border-radius: 50%;
-  animation: girar .8s linear infinite;
-  margin: 0 auto 12px;
+.spinner{
+    width:40px;
+    height:40px;
+
+    margin:0 auto 13px;
+
+    border:4px solid #e2e8f0;
+
+    border-top-color:var(--azul);
+
+    border-radius:50%;
+
+    animation:spin .8s linear infinite;
 }
 
-@keyframes girar {
-  to {
-    transform: rotate(360deg);
-  }
+.loading-box p{
+    color:#475569;
+
+    font-size:13px;
+    font-weight:700;
 }
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
-.toast {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  max-width: 400px;
-  background: #1e293b;
-  color: white;
-  padding: 13px 17px;
-  border-radius: 8px;
-  box-shadow: var(--sombra);
-  display: none;
-  z-index: 3000;
-  font-size: 14px;
+.toast-container{
+    position:fixed;
+
+    right:22px;
+    bottom:22px;
+
+    z-index:6000;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:10px;
 }
 
-.toast.show {
-  display: block;
+.toast{
+    min-width:300px;
+    max-width:420px;
+
+    padding:14px 16px;
+
+    display:flex;
+    align-items:flex-start;
+    gap:11px;
+
+    background:white;
+
+    border-radius:11px;
+
+    box-shadow:
+        0 10px 35px rgba(15,23,42,.17);
+
+    border-left:4px solid var(--azul);
+
+    animation:
+        toastIn .25s ease;
 }
 
-.toast.success {
-  background: var(--verde);
+.toast.success{
+    border-left-color:var(--verde);
 }
 
-.toast.error {
-  background: var(--rojo);
+.toast.error{
+    border-left-color:var(--rojo);
 }
 
-.toast.warning {
-  background: #a16207;
+.toast.warning{
+    border-left-color:var(--amarillo);
+}
+
+.toast-icon{
+    width:23px;
+    height:23px;
+
+    flex-shrink:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:var(--azul-claro);
+    color:var(--azul);
+}
+
+.toast.success .toast-icon{
+    background:var(--verde-claro);
+    color:var(--verde);
+}
+
+.toast.error .toast-icon{
+    background:var(--rojo-claro);
+    color:var(--rojo);
+}
+
+.toast.warning .toast-icon{
+    background:var(--amarillo-claro);
+    color:#9a6700;
+}
+
+.toast-message{
+    font-size:12px;
+    font-weight:650;
+    line-height:1.45;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer{
+    padding:20px 0 28px;
+
+    text-align:center;
+
+    color:#8491a3;
+
+    font-size:11px;
+}
+
+.footer strong{
+    color:#66758a;
+}
+
+/* =========================================================
+   ANIMACIONES
+========================================================= */
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+    }
+
+    to{
+        opacity:1;
+    }
+}
+
+@keyframes modalIn{
+    from{
+        opacity:0;
+        transform:translateY(12px) scale(.98);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+@keyframes toastIn{
+    from{
+        opacity:0;
+        transform:translateX(25px);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
 }
 
 /* =========================================================
    RESPONSIVE
-   ========================================================= */
+========================================================= */
 
-@media (max-width: 1100px) {
+@media(max-width:1200px){
 
-  .dashboard {
-    grid-template-columns:
-      repeat(3, 1fr);
-  }
+    .dashboard{
+        grid-template-columns:
+            repeat(3,1fr);
+    }
 
-  .form-grid {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    .form-grid{
+        grid-template-columns:
+            repeat(4,1fr);
+    }
 
-  .filters {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    .filters{
+        grid-template-columns:
+            repeat(4,1fr);
+    }
+
 }
 
-@media (max-width: 650px) {
+@media(max-width:900px){
 
-  .dashboard {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    .topbar-inner{
+        align-items:flex-start;
+    }
 
-  .form-grid,
-  .filters,
-  .detalle-grid {
-    grid-template-columns: 1fr;
-  }
+    .system-status{
+        display:none;
+    }
 
-  .form-group.span2 {
-    grid-column: auto;
-  }
+    .form-grid,
+    .form-grid.two,
+    .form-grid.three,
+    .form-grid.four{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
 
-  .container {
-    width: 94%;
-  }
+    .field.span-2,
+    .field.span-3{
+        grid-column:span 2;
+    }
 
-  .header h1 {
-    font-size: 20px;
-  }
+    .filters{
+        grid-template-columns:
+            repeat(3,1fr);
+    }
 
-  .tab {
-    flex: 1;
-    padding: 10px;
-    font-size: 12px;
-  }
+}
+
+@media(max-width:650px){
+
+    .container{
+        width:94%;
+    }
+
+    main{
+        padding-top:17px;
+    }
+
+    .topbar-inner{
+        min-height:auto;
+    }
+
+    .brand-icon{
+        width:50px;
+        height:50px;
+        border-radius:13px;
+    }
+
+    .brand-icon svg{
+        width:28px;
+        height:28px;
+    }
+
+    .brand-text h1{
+        font-size:17px;
+    }
+
+    .brand-text p{
+        font-size:10px;
+    }
+
+    .dashboard{
+        grid-template-columns:
+            repeat(2,1fr);
+
+        gap:10px;
+    }
+
+    .kpi{
+        padding:15px;
+    }
+
+    .kpi-number{
+        font-size:25px;
+    }
+
+    .kpi-icon{
+        width:37px;
+        height:37px;
+    }
+
+    .tabs{
+        width:100%;
+    }
+
+    .tab{
+        flex:1;
+
+        padding:11px 10px;
+
+        font-size:12px;
+    }
+
+    .card-header{
+        padding:17px;
+    }
+
+    .form-body{
+        padding:17px;
+    }
+
+    .form-grid,
+    .form-grid.two,
+    .form-grid.three,
+    .form-grid.four{
+        grid-template-columns:1fr;
+    }
+
+    .field.span-2,
+    .field.span-3,
+    .field.full{
+        grid-column:1;
+    }
+
+    .form-actions{
+        flex-direction:column-reverse;
+    }
+
+    .form-actions .btn{
+        width:100%;
+    }
+
+    .filters{
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .filter-actions{
+        grid-column:1/-1;
+    }
+
+    .filter-actions .btn{
+        width:100%;
+    }
+
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .detail-item.full{
+        grid-column:1;
+    }
+
+    .toast-container{
+        left:12px;
+        right:12px;
+        bottom:12px;
+    }
+
+    .toast{
+        min-width:0;
+        width:100%;
+    }
+
+}
+
+@media(max-width:420px){
+
+    .dashboard{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    .filter-actions{
+        grid-column:1;
+    }
+
+}
+
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
+.hidden{
+    display:none !important;
+}
+
+.text-center{
+    text-align:center;
+}
+
+.text-right{
+    text-align:right;
 }
 
 </style>
@@ -673,4318 +1775,4497 @@ tbody tr:hover {
 
 <body>
 
+<div class="app">
+
+<!-- =======================================================
+     HEADER
+======================================================= -->
+
+<header class="topbar">
+
+    <div class="container topbar-inner">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8">
+
+                    <path d="M12 3l8 3v6c0 5-3.4 8.3-8 10-4.6-1.7-8-5-8-10V6l8-3z"/>
+
+                    <path d="M9 12l2 2 4-4"/>
+
+                </svg>
+
+            </div>
+
+            <div class="brand-text">
+
+                <h1>Gestión de Peticiones</h1>
+
+                <p>
+                    SECRETARÍA DE MOVILIDAD · LA CEJA DEL TAMBO
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="system-status">
+
+            <span class="status-dot"></span>
+
+            SISTEMA ACTIVO
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =======================================================
+     MAIN
+======================================================= -->
+
+<main>
+
 <div class="container">
 
-  <!-- =====================================================
-       ENCABEZADO
-       ===================================================== -->
 
-  <div class="header">
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
 
-    <h1>
-      GESTIÓN DE PETICIONES - LA CEJA
-    </h1>
+<section class="dashboard">
 
-    <p>
-      SECRETARÍA DE MOVILIDAD - LA CEJA
-      &nbsp;|&nbsp;
-      Gestión de Derechos de Petición y Solicitudes V1.1
-    </p>
+    <div class="kpi kpi-total">
 
-  </div>
+        <div class="kpi-top">
 
+            <span class="kpi-label">
+                Total registros
+            </span>
 
-  <!-- =====================================================
-       DASHBOARD
-       ===================================================== -->
+            <div class="kpi-icon">
 
-  <div class="dashboard">
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
 
-    <div class="card">
+                    <path d="M4 5h16M4 10h16M4 15h10M4 20h7"/>
 
-      <div class="card-label">
-        Total registros
-      </div>
+                </svg>
 
-      <div
-        class="card-value"
-        id="totalRegistros"
-      >
-        0
-      </div>
+            </div>
+
+        </div>
+
+        <div class="kpi-number"
+             id="kpiTotal">
+            0
+        </div>
 
     </div>
 
 
-    <div class="card pendiente">
+    <div class="kpi kpi-pendiente">
 
-      <div class="card-label">
-        Pendientes
-      </div>
+        <div class="kpi-top">
 
-      <div
-        class="card-value"
-        id="totalPendientes"
-      >
-        0
-      </div>
+            <span class="kpi-label">
+                Pendientes
+            </span>
 
-    </div>
+            <div class="kpi-icon">
 
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
 
-    <div class="card">
+                    <circle cx="12"
+                            cy="12"
+                            r="9"/>
 
-      <div class="card-label">
-        En trámite
-      </div>
+                    <path d="M12 7v5l3 2"/>
 
-      <div
-        class="card-value"
-        id="totalTramite"
-      >
-        0
-      </div>
+                </svg>
 
-    </div>
+            </div>
 
+        </div>
 
-    <div class="card respondido">
-
-      <div class="card-label">
-        Respondidas
-      </div>
-
-      <div
-        class="card-value"
-        id="totalRespondidas"
-      >
-        0
-      </div>
+        <div class="kpi-number"
+             id="kpiPendientes">
+            0
+        </div>
 
     </div>
 
 
-    <div class="card vencido">
+    <div class="kpi kpi-tramite">
 
-      <div class="card-label">
-        Vencidas
-      </div>
+        <div class="kpi-top">
 
-      <div
-        class="card-value"
-        id="totalVencidas"
-      >
-        0
-      </div>
+            <span class="kpi-label">
+                En trámite
+            </span>
+
+            <div class="kpi-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M12 2v4"/>
+
+                    <path d="M12 18v4"/>
+
+                    <path d="M4.93 4.93l2.83 2.83"/>
+
+                    <path d="M16.24 16.24l2.83 2.83"/>
+
+                    <path d="M2 12h4"/>
+
+                    <path d="M18 12h4"/>
+
+                    <path d="M4.93 19.07l2.83-2.83"/>
+
+                    <path d="M16.24 7.76l2.83-2.83"/>
+
+                </svg>
+
+            </div>
+
+        </div>
+
+        <div class="kpi-number"
+             id="kpiTramite">
+            0
+        </div>
 
     </div>
 
-  </div>
+
+    <div class="kpi kpi-respondido">
+
+        <div class="kpi-top">
+
+            <span class="kpi-label">
+                Respondidas
+            </span>
+
+            <div class="kpi-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M20 6L9 17l-5-5"/>
+
+                </svg>
+
+            </div>
+
+        </div>
+
+        <div class="kpi-number"
+             id="kpiRespondidas">
+            0
+        </div>
+
+    </div>
 
 
-  <!-- =====================================================
-       TABS
-       ===================================================== -->
+    <div class="kpi kpi-vencido">
 
-  <div class="tabs">
+        <div class="kpi-top">
+
+            <span class="kpi-label">
+                Vencidas
+            </span>
+
+            <div class="kpi-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <circle cx="12"
+                            cy="12"
+                            r="9"/>
+
+                    <path d="M12 8v4"/>
+
+                    <path d="M12 16h.01"/>
+
+                </svg>
+
+            </div>
+
+        </div>
+
+        <div class="kpi-number"
+             id="kpiVencidas">
+            0
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     TABS
+===================================================== -->
+
+<div class="card tabs-card">
+
+    <div class="tabs">
+
+        <button
+            class="tab active"
+            onclick="mostrarTab('registro',this)">
+
+            <svg width="16"
+                 height="16"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 style="vertical-align:-3px;margin-right:6px">
+
+                <path d="M12 5v14"/>
+
+                <path d="M5 12h14"/>
+
+            </svg>
+
+            Registrar petición
+
+        </button>
+
+
+        <button
+            class="tab"
+            onclick="mostrarTab('seguimiento',this)">
+
+            <svg width="16"
+                 height="16"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 style="vertical-align:-3px;margin-right:6px">
+
+                <circle cx="11"
+                        cy="11"
+                        r="7"/>
+
+                <path d="m20 20-4-4"/>
+
+            </svg>
+
+            Seguimiento
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     REGISTRO
+===================================================== -->
+
+<section
+    id="tabRegistro"
+    class="tab-content active">
+
+<div class="card">
+
+    <div class="card-header">
+
+        <div class="card-title">
+
+            <div class="title-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+
+                    <path d="M14 2v6h6"/>
+
+                    <path d="M12 18v-6"/>
+
+                    <path d="M9 15h6"/>
+
+                </svg>
+
+            </div>
+
+            <div>
+
+                <h2>
+                    Registrar nueva petición
+                </h2>
+
+                <p>
+                    Ingrese la información requerida para crear el registro
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-body">
+
+<form id="formPeticion"
+      onsubmit="guardar(event)">
+
+
+<!-- ===================================================
+     SECCIÓN 1
+=================================================== -->
+
+<div class="form-section">
+
+    <div class="form-section-title">
+
+        <span class="number">1</span>
+
+        <h3>
+            Información de la petición
+        </h3>
+
+    </div>
+
+
+    <div class="form-grid">
+
+        <div class="field">
+
+            <label>
+                Consecutivo
+            </label>
+
+            <input
+                type="text"
+                id="consecutivo"
+                readonly>
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                ID / Radicado
+            </label>
+
+            <input
+                type="text"
+                id="radicado"
+                required
+                autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                Fecha recepción
+            </label>
+
+            <input
+                type="date"
+                id="fechaRecepcion"
+                required>
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                Tipo de petición
+            </label>
+
+            <select
+                id="tipoPeticion"
+                required>
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                Término (días)
+            </label>
+
+            <input
+                type="number"
+                id="termino"
+                min="1"
+                value="15"
+                required
+                oninput="calcularFechaLimite()">
+
+        </div>
+
+
+        <div class="field span-2">
+
+            <label class="required">
+                Asunto
+            </label>
+
+            <input
+                type="text"
+                id="asunto"
+                required
+                autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                Fecha límite
+            </label>
+
+            <input
+                type="date"
+                id="fechaLimite"
+                class="fecha-limite"
+                readonly>
+
+        </div>
+
+
+        <div class="field">
+
+            <label class="required">
+                Estado
+            </label>
+
+            <select
+                id="estado"
+                required>
+
+                <option value="PENDIENTE">
+                    PENDIENTE
+                </option>
+
+                <option value="EN TRÁMITE">
+                    EN TRÁMITE
+                </option>
+
+                <option value="RESPONDIDO">
+                    RESPONDIDO
+                </option>
+
+                <option value="CERRADO">
+                    CERRADO
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================
+     SECCIÓN 2
+=================================================== -->
+
+<div class="form-section">
+
+    <div class="form-section-title">
+
+        <span class="number">2</span>
+
+        <h3>
+            Datos del peticionario
+        </h3>
+
+    </div>
+
+
+    <div class="form-grid">
+
+        <div class="field span-2">
+
+            <label class="required">
+                Peticionario
+            </label>
+
+            <input
+                type="text"
+                id="peticionario"
+                required
+                autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Documento / Identificación
+            </label>
+
+            <input
+                type="text"
+                id="documento"
+                autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Teléfono
+            </label>
+
+            <input
+                type="tel"
+                id="telefono"
+                autocomplete="off">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Correo electrónico
+            </label>
+
+            <input
+                type="email"
+                id="correo"
+                autocomplete="off">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================
+     SECCIÓN 3
+=================================================== -->
+
+<div class="form-section">
+
+    <div class="form-section-title">
+
+        <span class="number">3</span>
+
+        <h3>
+            Gestión de la petición
+        </h3>
+
+    </div>
+
+
+    <div class="form-grid">
+
+        <div class="field span-2">
+
+            <label class="required">
+                Funcionario responsable
+            </label>
+
+            <select
+                id="funcionario"
+                required>
+
+                <option value="">
+                    Seleccione funcionario...
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Fecha de respuesta
+            </label>
+
+            <input
+                type="date"
+                id="fechaRespuesta">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Medio de respuesta
+            </label>
+
+            <select
+                id="medioRespuesta">
+
+                <option value="">
+                    Seleccione...
+                </option>
+
+                <option value="CORREO ELECTRÓNICO">
+                    CORREO ELECTRÓNICO
+                </option>
+
+                <option value="FÍSICO">
+                    FÍSICO
+                </option>
+
+                <option value="VENTANILLA">
+                    VENTANILLA
+                </option>
+
+                <option value="NOTIFICACIÓN">
+                    NOTIFICACIÓN
+                </option>
+
+                <option value="OTRO">
+                    OTRO
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="field full">
+
+            <label>
+                Observaciones
+            </label>
+
+            <textarea
+                id="observaciones"
+                placeholder="Ingrese observaciones adicionales..."></textarea>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================
+     ACCIONES
+=================================================== -->
+
+<div class="form-actions">
 
     <button
-      class="tab active"
-      onclick="mostrarSeccion(
-        'registro',
-        this
-      )"
-    >
-      Registrar petición
+        type="button"
+        class="btn btn-secondary"
+        onclick="nuevoRegistro()">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
+
+            <path d="M3 12a9 9 0 1 0 3-6.7"/>
+
+            <path d="M3 4v5h5"/>
+
+        </svg>
+
+        Limpiar
+
     </button>
+
 
     <button
-      class="tab"
-      onclick="mostrarSeccion(
-        'seguimiento',
-        this
-      )"
-    >
-      Seguimiento
+        type="submit"
+        id="btnGuardar"
+        class="btn btn-primary">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
+
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+
+            <path d="M17 21v-8H7v8"/>
+
+            <path d="M7 3v5h8"/>
+
+        </svg>
+
+        Guardar petición
+
     </button>
 
-  </div>
+</div>
 
 
-  <!-- =====================================================
-       REGISTRO
-       ===================================================== -->
+</form>
 
-  <section
-    id="seccionRegistro"
-    class="section active"
-  >
+    </div>
 
-    <div
-      id="modoEdicion"
-      class="editing hidden"
-    >
-      EDITANDO REGISTRO
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     SEGUIMIENTO
+===================================================== -->
+
+<section
+    id="tabSeguimiento"
+    class="tab-content">
+
+<div class="card">
+
+    <div class="card-header">
+
+        <div class="card-title">
+
+            <div class="title-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <circle cx="11"
+                            cy="11"
+                            r="7"/>
+
+                    <path d="m20 20-4-4"/>
+
+                </svg>
+
+            </div>
+
+            <div>
+
+                <h2>
+                    Seguimiento de peticiones
+                </h2>
+
+                <p>
+                    Consulte, filtre y gestione los registros existentes
+                </p>
+
+            </div>
+
+        </div>
+
+        <button
+            class="btn btn-outline btn-sm"
+            onclick="cargarRegistros()">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path d="M3 12a9 9 0 0 1 15.54-6.14L21 9"/>
+
+                <path d="M21 3v6h-6"/>
+
+                <path d="M21 12a9 9 0 0 1-15.54 6.14L3 15"/>
+
+                <path d="M3 21v-6h6"/>
+
+            </svg>
+
+            Actualizar
+
+        </button>
+
     </div>
 
 
-    <form
-      id="formPeticion"
-      onsubmit="guardar(event)"
-    >
+<!-- ===================================================
+     FILTROS
+=================================================== -->
 
-      <input
-        type="hidden"
-        id="filaEdicion"
-      >
+<div class="filter-panel">
 
+    <div class="filter-title">
 
-      <div class="form-grid">
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
 
-        <!-- CONSECUTIVO -->
+            <path d="M4 6h16"/>
 
-        <div class="form-group">
+            <path d="M7 12h10"/>
 
-          <label>
-            Consecutivo
-          </label>
+            <path d="M10 18h4"/>
 
-          <input
-            type="text"
-            id="consecutivo"
-            readonly
-          >
+        </svg>
 
-        </div>
+        Filtros de búsqueda
 
+    </div>
 
-        <!-- RADICADO -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="radicado"
-          >
-            ID / Radicado
-          </label>
-
-          <input
-            type="text"
-            id="radicado"
-            required
-          >
-
-        </div>
-
-
-        <!-- FECHA RECEPCIÓN -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="fechaRecepcion"
-          >
-            Fecha de recepción
-          </label>
-
-          <input
-            type="date"
-            id="fechaRecepcion"
-            required
-          >
-
-        </div>
-
-
-        <!-- PETICIONARIO -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="peticionario"
-          >
-            Peticionario
-          </label>
-
-          <input
-            type="text"
-            id="peticionario"
-            required
-          >
-
-        </div>
-
-
-        <!-- DOCUMENTO -->
-
-        <div class="form-group">
-
-          <label for="documento">
-            Documento / Identificación
-          </label>
-
-          <input
-            type="text"
-            id="documento"
-          >
-
-        </div>
-
-
-        <!-- TELÉFONO -->
-
-        <div class="form-group">
-
-          <label for="telefono">
-            Teléfono
-          </label>
-
-          <input
-            type="text"
-            id="telefono"
-          >
-
-        </div>
-
-
-        <!-- CORREO -->
-
-        <div class="form-group">
-
-          <label for="correo">
-            Correo electrónico
-          </label>
-
-          <input
-            type="email"
-            id="correo"
-          >
-
-        </div>
-
-
-        <!-- TIPO -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="tipoPeticion"
-          >
-            Tipo de petición
-          </label>
-
-          <select
-            id="tipoPeticion"
-            required
-          >
-
-            <option value="">
-              Seleccione...
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- FUNCIONARIO -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="funcionario"
-          >
-            Funcionario responsable
-          </label>
-
-          <select
-            id="funcionario"
-            required
-          >
-
-            <option value="">
-              Seleccione...
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- ASUNTO -->
-
-        <div class="form-group span2">
-
-          <label for="asunto">
-            Asunto
-          </label>
-
-          <input
-            type="text"
-            id="asunto"
-          >
-
-        </div>
-
-
-        <!-- TÉRMINO -->
-
-        <div class="form-group">
-
-          <label
-            class="required"
-            for="termino"
-          >
-            Término (días)
-          </label>
-
-          <input
-            type="number"
-            id="termino"
-            min="0"
-            value="15"
-            required
-          >
-
-        </div>
-
-
-        <!-- FECHA LÍMITE -->
-
-        <div class="form-group">
-
-          <label for="fechaLimite">
-            Fecha límite de respuesta
-          </label>
-
-          <input
-            type="date"
-            id="fechaLimite"
-            readonly
-          >
-
-        </div>
-
-
-        <!-- ESTADO -->
-
-        <div class="form-group">
-
-          <label for="estado">
-            Estado
-          </label>
-
-          <select id="estado">
-
-            <option value="PENDIENTE">
-              PENDIENTE
-            </option>
-
-            <option value="EN TRÁMITE">
-              EN TRÁMITE
-            </option>
-
-            <option value="RESPONDIDO">
-              RESPONDIDO
-            </option>
-
-            <option value="CERRADO">
-              CERRADO
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- FECHA RESPUESTA -->
-
-        <div class="form-group">
-
-          <label for="fechaRespuesta">
-            Fecha de respuesta
-          </label>
-
-          <input
-            type="date"
-            id="fechaRespuesta"
-          >
-
-        </div>
-
-
-        <!-- MEDIO -->
-
-        <div class="form-group">
-
-          <label for="medioRespuesta">
-            Medio de respuesta
-          </label>
-
-          <select
-            id="medioRespuesta"
-          >
-
-            <option value="">
-              Seleccione...
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- OBSERVACIONES -->
-
-        <div class="form-group full">
-
-          <label for="observaciones">
-            Observaciones
-          </label>
-
-          <textarea
-            id="observaciones"
-          ></textarea>
-
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           BOTONES
-           ================================================= -->
-
-      <div class="actions">
-
-        <button
-          type="submit"
-          class="btn btn-success"
-          id="btnGuardar"
-        >
-          Guardar registro
-        </button>
-
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="irSeguimiento()"
-        >
-          Ir a seguimiento
-        </button>
-
-
-        <button
-          type="button"
-          class="btn btn-light"
-          onclick="limpiarFormulario()"
-        >
-          Limpiar
-        </button>
-
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick="nuevoRegistro(true)"
-        >
-          Nuevo
-        </button>
-
-      </div>
-
-    </form>
-
-  </section>
-
-
-  <!-- =====================================================
-       SEGUIMIENTO
-       ===================================================== -->
-
-  <section
-    id="seccionSeguimiento"
-    class="section"
-  >
 
     <div class="filters">
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Radicado
-        </label>
+            <label>
+                Radicado
+            </label>
 
-        <input
-          type="text"
-          id="filtroRadicado"
-          oninput="aplicarFiltros()"
-        >
+            <input
+                type="text"
+                id="filtroRadicado"
+                placeholder="Buscar...">
 
-      </div>
-
-
-      <div class="form-group">
-
-        <label>
-          Documento
-        </label>
-
-        <input
-          type="text"
-          id="filtroDocumento"
-          oninput="aplicarFiltros()"
-        >
-
-      </div>
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Peticionario
-        </label>
+            <label>
+                Documento
+            </label>
 
-        <input
-          type="text"
-          id="filtroPeticionario"
-          oninput="aplicarFiltros()"
-        >
+            <input
+                type="text"
+                id="filtroDocumento"
+                placeholder="Buscar...">
 
-      </div>
-
-
-      <div class="form-group">
-
-        <label>
-          Funcionario
-        </label>
-
-        <select
-          id="filtroFuncionario"
-          onchange="aplicarFiltros()"
-        >
-
-          <option value="">
-            Todos
-          </option>
-
-        </select>
-
-      </div>
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Tipo
-        </label>
+            <label>
+                Peticionario
+            </label>
 
-        <select
-          id="filtroTipo"
-          onchange="aplicarFiltros()"
-        >
+            <input
+                type="text"
+                id="filtroPeticionario"
+                placeholder="Buscar...">
 
-          <option value="">
-            Todos
-          </option>
-
-        </select>
-
-      </div>
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Estado
-        </label>
+            <label>
+                Funcionario
+            </label>
 
-        <select
-          id="filtroEstado"
-          onchange="aplicarFiltros()"
-        >
+            <select id="filtroFuncionario">
 
-          <option value="">
-            Todos
-          </option>
+                <option value="">
+                    Todos
+                </option>
 
-          <option value="PENDIENTE">
-            PENDIENTE
-          </option>
+            </select>
 
-          <option value="EN TRÁMITE">
-            EN TRÁMITE
-          </option>
-
-          <option value="RESPONDIDO">
-            RESPONDIDO
-          </option>
-
-          <option value="CERRADO">
-            CERRADO
-          </option>
-
-        </select>
-
-      </div>
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Semáforo
-        </label>
+            <label>
+                Tipo
+            </label>
 
-        <select
-          id="filtroSemaforo"
-          onchange="aplicarFiltros()"
-        >
+            <select id="filtroTipo">
 
-          <option value="">
-            Todos
-          </option>
+                <option value="">
+                    Todos
+                </option>
 
-          <option value="VENCIDO">
-            VENCIDO
-          </option>
+            </select>
 
-          <option value="PRÓXIMO A VENCER">
-            PRÓXIMO A VENCER
-          </option>
-
-          <option value="EN TÉRMINO">
-            EN TÉRMINO
-          </option>
-
-          <option value="RESPONDIDO">
-            RESPONDIDO
-          </option>
-
-        </select>
-
-      </div>
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Desde
-        </label>
+            <label>
+                Estado
+            </label>
 
-        <input
-          type="date"
-          id="filtroDesde"
-          onchange="aplicarFiltros()"
-        >
+            <select id="filtroEstado">
 
-      </div>
+                <option value="">
+                    Todos
+                </option>
+
+                <option value="PENDIENTE">
+                    PENDIENTE
+                </option>
+
+                <option value="EN TRÁMITE">
+                    EN TRÁMITE
+                </option>
+
+                <option value="RESPONDIDO">
+                    RESPONDIDO
+                </option>
+
+                <option value="CERRADO">
+                    CERRADO
+                </option>
+
+            </select>
+
+        </div>
 
 
-      <div class="form-group">
+        <div class="filter-field">
 
-        <label>
-          Hasta
-        </label>
+            <label>
+                Semáforo
+            </label>
 
-        <input
-          type="date"
-          id="filtroHasta"
-          onchange="aplicarFiltros()"
-        >
+            <select id="filtroSemaforo">
 
-      </div>
+                <option value="">
+                    Todos
+                </option>
+
+                <option value="A TIEMPO">
+                    A TIEMPO
+                </option>
+
+                <option value="POR VENCER">
+                    POR VENCER
+                </option>
+
+                <option value="VENCIDO">
+                    VENCIDO
+                </option>
+
+            </select>
+
+        </div>
 
 
-      <div class="filter-actions">
+        <div class="filter-field">
 
-        <button
-          type="button"
-          class="btn btn-light"
-          onclick="limpiarFiltros()"
-        >
-          Limpiar filtros
-        </button>
+            <label>
+                Desde
+            </label>
 
-      </div>
+            <input
+                type="date"
+                id="filtroDesde">
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                Hasta
+            </label>
+
+            <input
+                type="date"
+                id="filtroHasta">
+
+        </div>
 
     </div>
 
-
-    <div class="actions">
-
-      <button
-        type="button"
-        class="btn btn-primary"
-        onclick="generarPDF()"
-      >
-        Generar reporte PDF
-      </button>
-
-    </div>
+</div>
 
 
-    <br>
+<!-- ===================================================
+     TABLA
+=================================================== -->
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+    Consecutivo
+</th>
+
+<th>
+    Radicado
+</th>
+
+<th>
+    Recepción
+</th>
+
+<th>
+    Peticionario
+</th>
+
+<th>
+    Documento
+</th>
+
+<th>
+    Tipo
+</th>
+
+<th>
+    Funcionario
+</th>
+
+<th>
+    Fecha límite
+</th>
+
+<th>
+    Días restantes
+</th>
+
+<th>
+    Semáforo
+</th>
+
+<th>
+    Estado
+</th>
+
+<th>
+    Acciones
+</th>
+
+</tr>
+
+</thead>
 
 
-    <div class="table-wrapper">
+<tbody id="tablaRegistros">
 
-      <table>
+<tr>
 
-        <thead>
+<td colspan="12">
 
-          <tr>
+<div class="empty-state">
 
-            <th>
-              Consecutivo
-            </th>
+    <div class="empty-icon">
 
-            <th>
-              Radicado
-            </th>
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
 
-            <th>
-              Recepción
-            </th>
+            <path d="M4 5h16v14H4z"/>
 
-            <th>
-              Peticionario
-            </th>
+            <path d="M8 9h8"/>
 
-            <th>
-              Documento
-            </th>
+            <path d="M8 13h5"/>
 
-            <th>
-              Tipo
-            </th>
-
-            <th>
-              Funcionario
-            </th>
-
-            <th>
-              Fecha límite
-            </th>
-
-            <th>
-              Días restantes
-            </th>
-
-            <th>
-              Semáforo
-            </th>
-
-            <th>
-              Estado
-            </th>
-
-            <th>
-              Acciones
-            </th>
-
-          </tr>
-
-        </thead>
-
-        <tbody
-          id="tablaRegistros"
-        >
-
-          <tr>
-
-            <td
-              colspan="12"
-              style="text-align:center"
-            >
-              Cargando...
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
+        </svg>
 
     </div>
 
-  </section>
+    <h3>
+        Cargando registros
+    </h3>
+
+    <p>
+        Espere mientras se consulta la información.
+    </p>
+
+</div>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</section>
+
+
+</div>
+
+</main>
+
+
+<!-- =======================================================
+     FOOTER
+======================================================= -->
+
+<footer class="footer">
+
+    <div class="container">
+
+        <strong>
+            SECRETARÍA DE MOVILIDAD – LA CEJA DEL TAMBO
+        </strong>
+
+        <br>
+
+        Sistema de Gestión de Peticiones · V1.1
+
+    </div>
+
+</footer>
+
 
 </div>
 
 
 <!-- =======================================================
      MODAL DETALLE
-     ======================================================= -->
+======================================================= -->
 
 <div
-  id="modalDetalle"
-  class="modal"
->
+    id="modalDetalle"
+    class="modal"
+    onclick="cerrarModalFondo(event)">
 
-  <div class="modal-content">
+<div class="modal-content">
 
     <div class="modal-header">
 
-      <h2>
-        Detalle de la petición
-      </h2>
+        <h2>
+            Detalle de la petición
+        </h2>
 
-      <button
-        class="close"
-        onclick="cerrarModalDetalle()"
-      >
-        ×
-      </button>
+        <button
+            class="modal-close"
+            onclick="cerrarModal('modalDetalle')">
+
+            ×
+
+        </button>
 
     </div>
 
 
     <div
-      class="modal-body"
-      id="detalleContenido"
-    ></div>
+        class="modal-body"
+        id="detalleContenido">
+
+    </div>
 
 
     <div class="modal-footer">
 
-      <button
-        class="btn btn-light"
-        onclick="cerrarModalDetalle()"
-      >
-        Cerrar
-      </button>
+        <button
+            class="btn btn-secondary"
+            onclick="cerrarModal('modalDetalle')">
+
+            Cerrar
+
+        </button>
+
+        <button
+            class="btn btn-primary"
+            onclick="editarDesdeDetalle()">
+
+            Editar registro
+
+        </button>
 
     </div>
 
-  </div>
+</div>
 
 </div>
 
 
 <!-- =======================================================
      MODAL PDF
-     ======================================================= -->
+======================================================= -->
 
 <div
-  id="modalPDF"
-  class="modal pdf-modal"
->
+    id="modalPDF"
+    class="modal pdf-modal">
 
-  <div class="modal-content">
+<div class="modal-content">
 
     <div class="modal-header">
 
-      <h2>
-        Reporte de peticiones
-      </h2>
+        <h2>
+            Vista previa del documento
+        </h2>
 
-      <button
-        class="close"
-        onclick="cerrarPDF()"
-      >
-        ×
-      </button>
+        <button
+            class="modal-close"
+            onclick="cerrarModal('modalPDF')">
+
+            ×
+
+        </button>
 
     </div>
 
 
-    <div
-      class="pdf-body"
-    >
+    <div class="modal-body pdf-body">
 
-      <iframe
-        id="pdfFrame"
-      ></iframe>
+        <iframe
+            id="pdfViewer"
+            title="Vista previa PDF">
+        </iframe>
 
     </div>
 
 
     <div class="modal-footer">
 
-      <button
-        class="btn btn-primary"
-        onclick="imprimirPDF()"
-      >
-        Imprimir
-      </button>
+        <button
+            class="btn btn-secondary"
+            onclick="cerrarModal('modalPDF')">
 
-      <button
-        class="btn btn-success"
-        onclick="descargarPDF()"
-      >
-        Descargar
-      </button>
+            Cerrar
 
-      <button
-        class="btn btn-light"
-        onclick="cerrarPDF()"
-      >
-        Cerrar
-      </button>
+        </button>
+
+        <button
+            class="btn btn-outline"
+            onclick="imprimirPDF()">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path d="M6 9V2h12v7"/>
+
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+
+                <path d="M6 14h12v8H6z"/>
+
+            </svg>
+
+            Imprimir
+
+        </button>
+
+
+        <button
+            class="btn btn-primary"
+            onclick="descargarPDF()">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path d="M12 3v12"/>
+
+                <path d="m7 10 5 5 5-5"/>
+
+                <path d="M5 21h14"/>
+
+            </svg>
+
+            Descargar PDF
+
+        </button>
 
     </div>
 
-  </div>
+</div>
 
 </div>
 
 
 <!-- =======================================================
      LOADING
-     ======================================================= -->
+======================================================= -->
 
 <div
-  id="loading"
-  class="loading"
->
+    id="loadingOverlay"
+    class="loading-overlay">
 
-  <div class="loading-box">
+<div class="loading-box">
 
     <div class="spinner"></div>
 
-    <div id="loadingText">
-      Procesando...
-    </div>
+    <p id="loadingText">
+        Procesando información...
+    </p>
 
-  </div>
+</div>
 
 </div>
 
 
 <!-- =======================================================
      TOAST
-     ======================================================= -->
+======================================================= -->
 
 <div
-  id="toast"
-  class="toast"
-></div>
+    id="toastContainer"
+    class="toast-container">
+</div>
 
+
+<!-- =======================================================
+     JAVASCRIPT
+======================================================= -->
 
 <script>
 
 /* =========================================================
    CONFIGURACIÓN
-   ========================================================= */
+========================================================= */
 
-/**
- * URL DEL WEB APP DE APPS SCRIPT.
- *
- * IMPORTANTE:
- * Utilizar la URL /exec de la implementación activa.
- */
-const WEB_APP_URL =
-  'https://script.google.com/macros/s/AKfycbx-9Hu1YVdhm0S8bDbWJLeXnX805B8u0AkOxakKoBuAZRgv1g1_eW3fSQdqaV91ZoY/exec';
+const URL_API =
+"https://script.google.com/macros/s/AKfycbx-9Hu1YVdhm0S8bDbWJLeXnX805B8u0AkOxakKoBuAZRgv1g1_eW3fSQdqaV91ZoY/exec";
 
 
 let registros = [];
-
 let registrosFiltrados = [];
 
-let tipos = [];
+let registroEditando = null;
+let detalleActual = null;
 
-let funcionarios = [];
-
-let estados = [];
-
-let mediosRespuesta = [];
-
-let pdfBlobURL = null;
-
-let pdfNombre = 'Reporte_Peticiones.pdf';
+const ES_APPS_SCRIPT =
+    typeof google !== "undefined" &&
+    google.script &&
+    google.script.run;
 
 
 /* =========================================================
    INICIO
-   ========================================================= */
+========================================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  function() {
+document.addEventListener("DOMContentLoaded",function(){
 
-    establecerFechaHoy();
+    inicializar();
+
+});
+
+
+function inicializar(){
 
     cargarDatosIniciales();
 
-    document
-      .getElementById('termino')
-      .addEventListener(
-        'input',
-        calcularFechaLimite
-      );
+    cargarSiguienteConsecutivo();
 
-    document
-      .getElementById('fechaRecepcion')
-      .addEventListener(
-        'change',
-        calcularFechaLimite
-      );
+    establecerFechaHoy();
 
-    document
-      .getElementById('fechaRespuesta')
-      .addEventListener(
-        'change',
-        actualizarEstadoPorFecha
-      );
+    configurarFiltros();
 
-  }
-);
-
-
-/* =========================================================
-   FECHA LOCAL COLOMBIA
-   ========================================================= */
-
-function obtenerFechaLocal() {
-
-  const fecha =
-    new Date();
-
-  const year =
-    fecha.getFullYear();
-
-  const month =
-    String(
-      fecha.getMonth() + 1
-    ).padStart(2, '0');
-
-  const day =
-    String(
-      fecha.getDate()
-    ).padStart(2, '0');
-
-  return (
-    year +
-    '-' +
-    month +
-    '-' +
-    day
-  );
 }
 
 
 /* =========================================================
-   ESTABLECER FECHA HOY
-   ========================================================= */
-
-function establecerFechaHoy() {
-
-  const campo =
-    document.getElementById(
-      'fechaRecepcion'
-    );
-
-  if (
-    campo &&
-    !campo.value
-  ) {
-
-    campo.value =
-      obtenerFechaLocal();
-  }
-
-  calcularFechaLimite();
-}
-
-
-/* =========================================================
-   COMUNICACIÓN CON BACKEND
-   ========================================================= */
-
-/**
- * ---------------------------------------------------------
- * GOOGLE SCRIPT RUN
- * ---------------------------------------------------------
- *
- * Si el HTML está dentro de Apps Script se utiliza
- * directamente google.script.run.
- *
- * ---------------------------------------------------------
- */
-
-function usarGoogleScriptRun() {
-
-  return (
-    typeof google !== 'undefined' &&
-    google.script &&
-    google.script.run
-  );
-}
-
-
-/**
- * ---------------------------------------------------------
- * JSONP
- * ---------------------------------------------------------
- *
- * Utilizado cuando la aplicación está en GitHub Pages.
- *
- * Evita el problema CORS de las consultas GET.
- * ---------------------------------------------------------
- */
-
-function llamarJSONP(
-  action,
-  payload,
-  successCallback,
-  failureCallback
-) {
-
-  const callbackName =
-    'jsonpCallback_' +
-    Date.now() +
-    '_' +
-    Math.floor(
-      Math.random() * 100000
-    );
-
-
-  const script =
-    document.createElement(
-      'script'
-    );
-
-
-  let terminado =
-    false;
-
-
-  window[
-    callbackName
-  ] = function(data) {
-
-    terminado =
-      true;
-
-
-    limpiar();
-
-
-    if (
-      data &&
-      data.status === 'error'
-    ) {
-
-      if (
-        failureCallback
-      ) {
-
-        failureCallback(
-          new Error(
-            data.message ||
-            'Error del servidor.'
-          )
-        );
-      }
-
-      return;
-    }
-
-
-    if (
-      successCallback
-    ) {
-
-      successCallback(
-        data
-          ? data.result
-          : null
-      );
-    }
-  };
-
-
-  const parametros =
-    new URLSearchParams();
-
-
-  parametros.set(
-    'action',
-    action
-  );
-
-
-  parametros.set(
-    'callback',
-    callbackName
-  );
-
-
-  if (
-    payload
-  ) {
-
-    parametros.set(
-      'data',
-      JSON.stringify(
-        payload
-      )
-    );
-  }
-
-
-  script.src =
-    WEB_APP_URL +
-    '?' +
-    parametros.toString();
-
-
-  script.async =
-    true;
-
-
-  script.onerror =
-    function() {
-
-      if (
-        terminado
-      ) {
-
-        return;
-      }
-
-
-      terminado =
-        true;
-
-
-      limpiar();
-
-
-      if (
-        failureCallback
-      ) {
-
-        failureCallback(
-          new Error(
-            'No fue posible comunicarse con Apps Script.'
-          )
-        );
-      }
-    };
-
-
-  document
-    .head
-    .appendChild(
-      script
-    );
-
-
-  const timeout =
-    setTimeout(
-      function() {
-
-        if (
-          terminado
-        ) {
-
-          return;
-        }
-
-
-        terminado =
-          true;
-
-
-        limpiar();
-
-
-        if (
-          failureCallback
-        ) {
-
-          failureCallback(
-            new Error(
-              'Tiempo de espera agotado.'
-            )
-          );
-        }
-
-      },
-      30000
-    );
-
-
-  function limpiar() {
-
-    clearTimeout(
-      timeout
-    );
-
-
-    if (
-      script.parentNode
-    ) {
-
-      script.parentNode.removeChild(
-        script
-      );
-    }
-
-
-    try {
-
-      delete window[
-        callbackName
-      ];
-
-    } catch (e) {
-
-      window[
-        callbackName
-      ] = undefined;
-    }
-  }
-}
-
-
-/**
- * ---------------------------------------------------------
- * POST
- * ---------------------------------------------------------
- *
- * Cuando estamos en Apps Script:
- * google.script.run
- *
- * Cuando estamos en GitHub Pages:
- * fetch no-cors.
- *
- * no-cors no permite leer la respuesta, por lo que después
- * de guardar se vuelve a cargar la información mediante
- * JSONP.
- * ---------------------------------------------------------
- */
-
-function enviarPOST(
-  action,
-  payload,
-  successCallback,
-  failureCallback
-) {
-
-  if (
-    usarGoogleScriptRun()
-  ) {
-
-    const runner =
-      google.script.run
-        .withSuccessHandler(
-          function(resultado) {
-
-            if (
-              successCallback
-            ) {
-
-              successCallback(
-                resultado
-              );
-            }
-
-          }
-        )
-        .withFailureHandler(
-          function(error) {
-
-            if (
-              failureCallback
-            ) {
-
-              failureCallback(
-                error
-              );
-            }
-
-          }
-        );
-
-
-    runner[action](
-      payload
-    );
-
-
-    return;
-  }
-
-
-  /**
-   * GitHub Pages.
-   */
-  fetch(
-    WEB_APP_URL +
-    '?action=' +
-    encodeURIComponent(
-      action
-    ),
-    {
-      method:
-        'POST',
-
-      mode:
-        'no-cors',
-
-      headers: {
-        'Content-Type':
-          'text/plain;charset=utf-8'
-      },
-
-      body:
-        JSON.stringify(
-          payload || {}
-        )
-    }
-  )
-  .then(
-    function() {
-
-      /**
-       * No podemos leer la respuesta debido
-       * a no-cors.
-       *
-       * Consideramos enviada la solicitud.
-       */
-      if (
-        successCallback
-      ) {
-
-        successCallback({
-          ok:
-            true
+   TABS
+========================================================= */
+
+function mostrarTab(tab,boton){
+
+    document
+        .querySelectorAll(".tab-content")
+        .forEach(el=>{
+            el.classList.remove("active");
         });
-      }
+
+    document
+        .querySelectorAll(".tab")
+        .forEach(el=>{
+            el.classList.remove("active");
+        });
+
+
+    if(tab==="registro"){
+
+        document
+            .getElementById("tabRegistro")
+            .classList.add("active");
 
     }
-  )
-  .catch(
-    function(error) {
 
-      if (
-        failureCallback
-      ) {
+    if(tab==="seguimiento"){
 
-        failureCallback(
-          error
-        );
-      }
+        document
+            .getElementById("tabSeguimiento")
+            .classList.add("active");
+
+        cargarRegistros();
+
     }
-  );
+
+
+    if(boton){
+        boton.classList.add("active");
+    }
+
 }
 
 
-/**
- * ---------------------------------------------------------
- * CALL BACKEND
- * ---------------------------------------------------------
- */
+/* =========================================================
+   FECHA ACTUAL
+========================================================= */
 
-function callBackend(
-  method,
-  payload,
-  successCallback,
-  failureCallback
-) {
+function establecerFechaHoy(){
 
-  if (
-    usarGoogleScriptRun()
-  ) {
+    const input =
+        document.getElementById("fechaRecepcion");
 
-    enviarPOST(
-      method,
-      payload,
-      successCallback,
-      failureCallback
-    );
+    if(!input.value){
 
-    return;
-  }
+        const hoy =
+            new Date();
 
+        const fecha =
+            hoy.getFullYear() +
+            "-" +
+            String(hoy.getMonth()+1).padStart(2,"0") +
+            "-" +
+            String(hoy.getDate()).padStart(2,"0");
 
-  /**
-   * Consultas: JSONP.
-   */
-  const accionesGET = [
+        input.value=fecha;
 
-    'obtenerDatosIniciales',
+    }
 
-    'obtenerSiguienteConsecutivo',
-
-    'listarRegistros',
-
-    'obtenerDashboard'
-  ];
-
-
-  if (
-    accionesGET.includes(
-      method
-    )
-  ) {
-
-    llamarJSONP(
-      method,
-      payload,
-      successCallback,
-      failureCallback
-    );
-
-    return;
-  }
-
-
-  /**
-   * Escrituras: POST.
-   */
-  enviarPOST(
-    method,
-    payload,
-    successCallback,
-    failureCallback
-  );
 }
 
 
 /* =========================================================
    CARGAR DATOS INICIALES
-   ========================================================= */
+========================================================= */
 
-function cargarDatosIniciales() {
+function cargarDatosIniciales(){
 
-  mostrarLoading(
-    'Cargando información...'
-  );
+    mostrarLoading("Cargando información...");
 
 
-  callBackend(
-    'obtenerDatosIniciales',
-    null,
+    if(ES_APPS_SCRIPT){
 
-    function(data) {
+        google.script.run
 
-      ocultarLoading();
+            .withSuccessHandler(function(data){
 
+                procesarDatosIniciales(data);
 
-      if (
-        !data
-      ) {
+                ocultarLoading();
 
-        mostrarToast(
-          'No se recibieron datos del servidor.',
-          'error'
-        );
+            })
+
+            .withFailureHandler(function(error){
+
+                ocultarLoading();
+
+                mostrarToast(
+                    "No se pudieron cargar los menús.",
+                    "error"
+                );
+
+            })
+
+            .obtenerDatosIniciales();
 
         return;
-      }
-
-
-      tipos =
-        Array.isArray(
-          data.tipos
-        )
-          ? data.tipos
-          : [];
-
-
-      funcionarios =
-        Array.isArray(
-          data.funcionarios
-        )
-          ? data.funcionarios
-          : [];
-
-
-      estados =
-        Array.isArray(
-          data.estados
-        )
-          ? data.estados
-          : [];
-
-
-      mediosRespuesta =
-        Array.isArray(
-          data.mediosRespuesta
-        )
-          ? data.mediosRespuesta
-          : [];
-
-
-      registros =
-        Array.isArray(
-          data.registros
-        )
-          ? data.registros
-          : [];
-
-
-      llenarSelects();
-
-      actualizarDashboard(
-        data.dashboard
-      );
-
-      aplicarFiltros();
-
-      obtenerConsecutivo();
-
-      calcularFechaLimite();
-
-    },
-
-    function(error) {
-
-      ocultarLoading();
-
-
-      console.error(
-        error
-      );
-
-
-      mostrarToast(
-        'No fue posible cargar los datos: ' +
-        (
-          error.message ||
-          error
-        ),
-        'error'
-      );
-
     }
-  );
+
+
+    const callback =
+        "callbackInicial_" +
+        Date.now();
+
+
+    window[callback]=function(data){
+
+        procesarDatosIniciales(data);
+
+        ocultarLoading();
+
+        delete window[callback];
+
+    };
+
+
+    const script =
+        document.createElement("script");
+
+    script.src =
+        URL_API +
+        "?accion=obtenerDatosIniciales" +
+        "&callback=" +
+        callback;
+
+    script.onerror=function(){
+
+        ocultarLoading();
+
+        mostrarToast(
+            "No se pudo conectar con el servidor.",
+            "error"
+        );
+
+    };
+
+    document.body.appendChild(script);
+
 }
 
 
-/* =========================================================
-   LLENAR SELECTS
-   ========================================================= */
+function procesarDatosIniciales(data){
 
-function llenarSelects() {
-
-  llenarSelect(
-    'tipoPeticion',
-    tipos,
-    'Seleccione...'
-  );
+    if(!data){
+        return;
+    }
 
 
-  llenarSelect(
-    'funcionario',
-    funcionarios,
-    'Seleccione...'
-  );
+    const funcionarios =
+        data.funcionarios ||
+        data.FUNCIONARIOS ||
+        [];
+
+    const tipos =
+        data.tipos ||
+        data.TIPOS ||
+        data.tipoPeticion ||
+        [];
 
 
-  llenarSelect(
-    'medioRespuesta',
-    mediosRespuesta,
-    'Seleccione...'
-  );
+    llenarSelect(
+        "funcionario",
+        funcionarios,
+        "Seleccione funcionario..."
+    );
 
 
-  llenarSelect(
-    'filtroFuncionario',
-    funcionarios,
-    'Todos'
-  );
+    llenarSelect(
+        "filtroFuncionario",
+        funcionarios,
+        "Todos"
+    );
 
 
-  llenarSelect(
-    'filtroTipo',
-    tipos,
-    'Todos'
-  );
+    llenarSelect(
+        "tipoPeticion",
+        tipos,
+        "Seleccione..."
+    );
+
+
+    llenarSelect(
+        "filtroTipo",
+        tipos,
+        "Todos"
+    );
+
 }
 
 
 /* =========================================================
    LLENAR SELECT
-   ========================================================= */
+========================================================= */
 
-function llenarSelect(
-  id,
-  valores,
-  textoInicial
-) {
+function llenarSelect(id,datos,placeholder){
 
-  const select =
-    document.getElementById(
-      id
-    );
+    const select =
+        document.getElementById(id);
 
-
-  if (
-    !select
-  ) {
-
-    return;
-  }
-
-
-  const valorActual =
-    select.value;
-
-
-  select.innerHTML =
-    '';
-
-
-  const option =
-    document.createElement(
-      'option'
-    );
-
-
-  option.value =
-    '';
-
-  option.textContent =
-    textoInicial;
-
-
-  select.appendChild(
-    option
-  );
-
-
-  valores.forEach(
-    function(valor) {
-
-      const opcion =
-        document.createElement(
-          'option'
-        );
-
-
-      opcion.value =
-        valor;
-
-
-      opcion.textContent =
-        valor;
-
-
-      select.appendChild(
-        opcion
-      );
+    if(!select){
+        return;
     }
-  );
 
 
-  if (
-    valores.includes(
-      valorActual
-    )
-  ) {
+    select.innerHTML="";
 
-    select.value =
-      valorActual;
-  }
+
+    const primera =
+        document.createElement("option");
+
+    primera.value="";
+
+    primera.textContent=placeholder;
+
+    select.appendChild(primera);
+
+
+    if(!Array.isArray(datos)){
+        return;
+    }
+
+
+    datos.forEach(item=>{
+
+        const option =
+            document.createElement("option");
+
+
+        if(typeof item==="object"){
+
+            option.value =
+                item.valor ||
+                item.value ||
+                item.nombre ||
+                item.NOMBRE ||
+                "";
+
+            option.textContent =
+                item.nombre ||
+                item.NOMBRE ||
+                item.texto ||
+                item.label ||
+                item.valor ||
+                item.value ||
+                "";
+
+        }else{
+
+            option.value=item;
+
+            option.textContent=item;
+
+        }
+
+
+        if(option.value){
+
+            select.appendChild(option);
+
+        }
+
+    });
+
 }
 
 
 /* =========================================================
    CONSECUTIVO
-   ========================================================= */
+========================================================= */
 
-function obtenerConsecutivo() {
+function cargarSiguienteConsecutivo(){
 
-  callBackend(
-    'obtenerSiguienteConsecutivo',
-    null,
+    if(ES_APPS_SCRIPT){
 
-    function(numero) {
+        google.script.run
 
-      const campo =
+            .withSuccessHandler(function(numero){
+
+                document
+                    .getElementById("consecutivo")
+                    .value =
+                    numero || "";
+
+            })
+
+            .withFailureHandler(function(){
+
+                console.log(
+                    "No fue posible cargar consecutivo"
+                );
+
+            })
+
+            .obtenerSiguienteConsecutivo();
+
+        return;
+    }
+
+
+    const callback =
+        "callbackConsecutivo_" +
+        Date.now();
+
+
+    window[callback]=function(data){
+
+        const numero =
+            typeof data==="object"
+                ? (
+                    data.consecutivo ||
+                    data.numero ||
+                    ""
+                )
+                : data;
+
+
+        document
+            .getElementById("consecutivo")
+            .value =
+            numero || "";
+
+
+        delete window[callback];
+
+    };
+
+
+    const script =
+        document.createElement("script");
+
+
+    script.src =
+        URL_API +
+        "?accion=obtenerSiguienteConsecutivo" +
+        "&callback=" +
+        callback;
+
+
+    document.body.appendChild(script);
+
+}
+
+
+/* =========================================================
+   FECHA LÍMITE
+========================================================= */
+
+function calcularFechaLimite(){
+
+    const fecha =
         document.getElementById(
-          'consecutivo'
+            "fechaRecepcion"
+        ).value;
+
+    const termino =
+        parseInt(
+            document.getElementById(
+                "termino"
+            ).value
         );
 
 
-      if (
-        campo
-      ) {
+    if(!fecha || !termino){
 
-        campo.value =
-          numero || '';
-      }
+        document
+            .getElementById("fechaLimite")
+            .value="";
 
-    },
-
-    function(error) {
-
-      console.error(
-        error
-      );
-
-      mostrarToast(
-        'No fue posible obtener el consecutivo.',
-        'warning'
-      );
-
+        return;
     }
-  );
+
+
+    const f =
+        new Date(fecha + "T00:00:00");
+
+
+    f.setDate(
+        f.getDate()+termino
+    );
+
+
+    const resultado =
+        f.getFullYear() +
+        "-" +
+        String(f.getMonth()+1).padStart(2,"0") +
+        "-" +
+        String(f.getDate()).padStart(2,"0");
+
+
+    document
+        .getElementById("fechaLimite")
+        .value=resultado;
+
 }
 
 
 /* =========================================================
    GUARDAR
-   ========================================================= */
+========================================================= */
 
-function guardar(event) {
+function guardar(event){
 
-  event.preventDefault();
-
-
-  const datos =
-    obtenerDatosFormulario();
+    event.preventDefault();
 
 
-  try {
-
-    validarFormulario(
-      datos
-    );
-
-  } catch (error) {
-
-    mostrarToast(
-      error.message,
-      'warning'
-    );
-
-    return;
-  }
+    calcularFechaLimite();
 
 
-  const fila =
-    document.getElementById(
-      'filaEdicion'
-    ).value;
-
-
-  const editando =
-    !!fila;
-
-
-  const action =
-    editando
-      ? 'actualizarPeticion'
-      : 'guardarPeticion';
-
-
-  if (
-    editando
-  ) {
-
-    datos.fila =
-      parseInt(
-        fila,
-        10
-      );
-  }
-
-
-  mostrarLoading(
-    editando
-      ? 'Actualizando registro...'
-      : 'Guardando registro...'
-  );
-
-
-  desactivarBotonGuardar();
-
-
-  callBackend(
-    action,
-    datos,
-
-    function(resultado) {
-
-      /**
-       * En GitHub Pages, POST no permite leer
-       * respuesta por no-cors.
-       *
-       * Por eso simplemente esperamos y luego
-       * consultamos nuevamente los datos.
-       */
-      if (
-        !usarGoogleScriptRun()
-      ) {
-
-        setTimeout(
-          function() {
-
-            cargarDespuesGuardar(
-              editando
-            );
-
-          },
-          1200
+    const formulario =
+        document.getElementById(
+            "formPeticion"
         );
 
-        return;
-      }
 
+    if(!formulario.checkValidity()){
 
-      ocultarLoading();
-
-      activarBotonGuardar();
-
-
-      if (
-        resultado &&
-        resultado.ok === false
-      ) {
-
-        mostrarToast(
-          resultado.mensaje ||
-          'No fue posible guardar.',
-          'error'
-        );
+        formulario.reportValidity();
 
         return;
-      }
-
-
-      mostrarToast(
-        editando
-          ? 'Registro actualizado correctamente.'
-          : 'Registro guardado correctamente.',
-        'success'
-      );
-
-
-      cargarDespuesGuardar(
-        editando
-      );
-
-    },
-
-    function(error) {
-
-      ocultarLoading();
-
-      activarBotonGuardar();
-
-
-      mostrarToast(
-        'Error: ' +
-        (
-          error.message ||
-          error
-        ),
-        'error'
-      );
 
     }
-  );
+
+
+    const datos =
+        obtenerDatosFormulario();
+
+
+    activarBotonGuardar(false);
+
+    mostrarLoading(
+        registroEditando
+            ? "Actualizando petición..."
+            : "Guardando petición..."
+    );
+
+
+    if(ES_APPS_SCRIPT){
+
+        const metodo =
+            registroEditando
+                ? "actualizarPeticion"
+                : "guardarPeticion";
+
+
+        google.script.run
+
+            .withSuccessHandler(function(respuesta){
+
+                ocultarLoading();
+
+                activarBotonGuardar(true);
+
+
+                if(
+                    respuesta &&
+                    respuesta.exito===false
+                ){
+
+                    mostrarToast(
+                        respuesta.mensaje ||
+                        "No fue posible guardar.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                mostrarToast(
+                    registroEditando
+                        ? "Petición actualizada correctamente."
+                        : "Petición guardada correctamente.",
+                    "success"
+                );
+
+
+                nuevoRegistro();
+
+                cargarRegistros();
+
+            })
+
+            .withFailureHandler(function(error){
+
+                ocultarLoading();
+
+                activarBotonGuardar(true);
+
+                mostrarToast(
+                    obtenerMensajeError(error),
+                    "error"
+                );
+
+            })[metodo](datos);
+
+        return;
+    }
+
+
+    fetch(
+        URL_API,
+        {
+            method:"POST",
+
+            mode:"no-cors",
+
+            headers:{
+                "Content-Type":
+                    "text/plain;charset=utf-8"
+            },
+
+            body:JSON.stringify({
+
+                accion:
+                    registroEditando
+                        ? "actualizarPeticion"
+                        : "guardarPeticion",
+
+                datos:datos
+
+            })
+        }
+    )
+    .then(function(){
+
+        ocultarLoading();
+
+        activarBotonGuardar(true);
+
+
+        mostrarToast(
+            registroEditando
+                ? "Petición actualizada correctamente."
+                : "Petición guardada correctamente.",
+            "success"
+        );
+
+
+        nuevoRegistro();
+
+
+        setTimeout(
+            cargarRegistros,
+            700
+        );
+
+    })
+    .catch(function(error){
+
+        ocultarLoading();
+
+        activarBotonGuardar(true);
+
+        mostrarToast(
+            obtenerMensajeError(error),
+            "error"
+        );
+
+    });
+
 }
 
 
 /* =========================================================
    OBTENER DATOS FORMULARIO
-   ========================================================= */
+========================================================= */
 
-function obtenerDatosFormulario() {
+function obtenerDatosFormulario(){
 
-  return {
+    return {
 
-    consecutivo:
-      valor('consecutivo'),
+        consecutivo:
+            valor("consecutivo"),
 
-    radicado:
-      valor('radicado'),
+        radicado:
+            valor("radicado"),
 
-    fechaRecepcion:
-      valor('fechaRecepcion'),
+        fechaRecepcion:
+            valor("fechaRecepcion"),
 
-    peticionario:
-      valor('peticionario'),
+        peticionario:
+            valor("peticionario"),
 
-    documento:
-      valor('documento'),
+        documento:
+            valor("documento"),
 
-    telefono:
-      valor('telefono'),
+        telefono:
+            valor("telefono"),
 
-    correo:
-      valor('correo'),
+        correo:
+            valor("correo"),
 
-    tipoPeticion:
-      valor('tipoPeticion'),
+        tipoPeticion:
+            valor("tipoPeticion"),
 
-    asunto:
-      valor('asunto'),
+        funcionario:
+            valor("funcionario"),
 
-    funcionario:
-      valor('funcionario'),
+        asunto:
+            valor("asunto"),
 
-    termino:
-      valor('termino'),
+        termino:
+            valor("termino"),
 
-    fechaLimite:
-      valor('fechaLimite'),
+        fechaLimite:
+            valor("fechaLimite"),
 
-    estado:
-      valor('estado'),
+        estado:
+            valor("estado"),
 
-    fechaRespuesta:
-      valor('fechaRespuesta'),
+        fechaRespuesta:
+            valor("fechaRespuesta"),
 
-    medioRespuesta:
-      valor('medioRespuesta'),
+        medioRespuesta:
+            valor("medioRespuesta"),
 
-    observaciones:
-      valor('observaciones')
-  };
+        observaciones:
+            valor("observaciones")
+
+    };
+
 }
 
 
-/* =========================================================
-   OBTENER VALOR
-   ========================================================= */
+function valor(id){
 
-function valor(id) {
+    const el =
+        document.getElementById(id);
 
-  const elemento =
-    document.getElementById(
-      id
-    );
+    return el
+        ? el.value.trim()
+        : "";
 
-
-  return elemento
-    ? elemento.value
-    : '';
-}
-
-
-/* =========================================================
-   VALIDAR FORMULARIO
-   ========================================================= */
-
-function validarFormulario(
-  datos
-) {
-
-  if (
-    !datos.radicado.trim()
-  ) {
-
-    throw new Error(
-      'El ID / Radicado es obligatorio.'
-    );
-  }
-
-
-  if (
-    !datos.fechaRecepcion
-  ) {
-
-    throw new Error(
-      'La fecha de recepción es obligatoria.'
-    );
-  }
-
-
-  if (
-    !datos.peticionario.trim()
-  ) {
-
-    throw new Error(
-      'El peticionario es obligatorio.'
-    );
-  }
-
-
-  if (
-    !datos.tipoPeticion
-  ) {
-
-    throw new Error(
-      'Debe seleccionar el tipo de petición.'
-    );
-  }
-
-
-  if (
-    !datos.funcionario
-  ) {
-
-    throw new Error(
-      'Debe seleccionar el funcionario responsable.'
-    );
-  }
-
-
-  const termino =
-    Number(
-      datos.termino
-    );
-
-
-  if (
-    isNaN(termino) ||
-    termino < 0
-  ) {
-
-    throw new Error(
-      'El término debe ser un número válido.'
-    );
-  }
-}
-
-
-/* =========================================================
-   CARGAR DESPUÉS DE GUARDAR
-   ========================================================= */
-
-function cargarDespuesGuardar(
-  editando
-) {
-
-  ocultarLoading();
-
-  activarBotonGuardar();
-
-
-  mostrarToast(
-    editando
-      ? 'Registro actualizado correctamente.'
-      : 'Registro guardado correctamente.',
-    'success'
-  );
-
-
-  nuevoRegistro(
-    false
-  );
-
-
-  /**
-   * Volver a cargar todo.
-   */
-  setTimeout(
-    function() {
-
-      cargarDatosIniciales();
-
-    },
-    500
-  );
-}
-
-
-/* =========================================================
-   DESACTIVAR BOTÓN
-   ========================================================= */
-
-function desactivarBotonGuardar() {
-
-  const boton =
-    document.getElementById(
-      'btnGuardar'
-    );
-
-
-  if (
-    boton
-  ) {
-
-    boton.disabled =
-      true;
-
-    boton.dataset.texto =
-      boton.textContent;
-
-    boton.textContent =
-      'Procesando...';
-  }
-}
-
-
-/* =========================================================
-   ACTIVAR BOTÓN
-   ========================================================= */
-
-function activarBotonGuardar() {
-
-  const boton =
-    document.getElementById(
-      'btnGuardar'
-    );
-
-
-  if (
-    boton
-  ) {
-
-    boton.disabled =
-      false;
-
-    boton.textContent =
-      boton.dataset.texto ||
-      'Guardar registro';
-  }
 }
 
 
 /* =========================================================
    NUEVO REGISTRO
-   ========================================================= */
+========================================================= */
 
-function nuevoRegistro(
-  mostrarMensaje
-) {
+function nuevoRegistro(){
 
-  const form =
-    document.getElementById(
-      'formPeticion'
-    );
+    const form =
+        document.getElementById(
+            "formPeticion"
+        );
 
-
-  if (
-    form
-  ) {
 
     form.reset();
-  }
 
 
-  document
-    .getElementById(
-      'filaEdicion'
-    )
-    .value =
-    '';
+    registroEditando=null;
 
 
-  document
-    .getElementById(
-      'modoEdicion'
-    )
-    .classList
-    .add(
-      'hidden'
-    );
+    document
+        .getElementById("estado")
+        .value="PENDIENTE";
 
 
-  const boton =
-    document.getElementById(
-      'btnGuardar'
-    );
+    document
+        .getElementById("termino")
+        .value="15";
 
 
-  if (
-    boton
-  ) {
+    establecerFechaHoy();
 
-    boton.textContent =
-      'Guardar registro';
-  }
+    calcularFechaLimite();
 
 
-  document
-    .getElementById(
-      'fechaRecepcion'
-    )
-    .value =
-    obtenerFechaLocal();
+    cargarSiguienteConsecutivo();
 
 
-  document
-    .getElementById(
-      'termino'
-    )
-    .value =
-    '15';
+    document
+        .getElementById("radicado")
+        .focus();
 
-
-  document
-    .getElementById(
-      'estado'
-    )
-    .value =
-    'PENDIENTE';
-
-
-  calcularFechaLimite();
-
-  obtenerConsecutivo();
-
-
-  if (
-    mostrarMensaje
-  ) {
-
-    mostrarToast(
-      'Nuevo registro preparado.',
-      'success'
-    );
-  }
 }
 
 
 /* =========================================================
-   LIMPIAR FORMULARIO
-   ========================================================= */
+   ACTIVAR BOTÓN
+========================================================= */
 
-function limpiarFormulario() {
+function activarBotonGuardar(activo){
 
-  nuevoRegistro(
-    false
-  );
+    const btn =
+        document.getElementById(
+            "btnGuardar"
+        );
 
-  mostrarToast(
-    'Formulario limpiado.',
-    'success'
-  );
+
+    if(!btn){
+        return;
+    }
+
+
+    btn.disabled=!activo;
+
+
+    if(activo){
+
+        btn.innerHTML=`
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+
+                <path d="M17 21v-8H7v8"/>
+
+                <path d="M7 3v5h8"/>
+
+            </svg>
+
+            Guardar petición
+        `;
+
+    }else{
+
+        btn.innerHTML=`
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path d="M12 2v4"/>
+
+                <path d="M12 18v4"/>
+
+                <path d="M4.93 4.93l2.83 2.83"/>
+
+                <path d="M16.24 16.24l2.83 2.83"/>
+
+                <path d="M2 12h4"/>
+
+                <path d="M18 12h4"/>
+
+            </svg>
+
+            Procesando...
+        `;
+
+    }
+
 }
 
 
 /* =========================================================
-   CALCULAR FECHA LÍMITE
-   ========================================================= */
+   CARGAR REGISTROS
+========================================================= */
 
-function calcularFechaLimite() {
+function cargarRegistros(){
 
-  const fechaTexto =
-    valor(
-      'fechaRecepcion'
-    );
+    if(ES_APPS_SCRIPT){
 
+        google.script.run
 
-  const termino =
-    Number(
-      valor(
-        'termino'
-      )
-    );
+            .withSuccessHandler(function(data){
 
-
-  const campo =
-    document.getElementById(
-      'fechaLimite'
-    );
+                registros =
+                    Array.isArray(data)
+                        ? data
+                        : (
+                            data.registros ||
+                            data.data ||
+                            []
+                        );
 
 
-  if (
-    !campo
-  ) {
+                aplicarFiltros();
 
-    return;
-  }
+                actualizarDashboard();
 
+            })
 
-  if (
-    !fechaTexto ||
-    isNaN(termino)
-  ) {
+            .withFailureHandler(function(error){
 
-    campo.value =
-      '';
+                mostrarToast(
+                    "No se pudieron cargar los registros.",
+                    "error"
+                );
 
-    return;
-  }
+            })
 
+            .listarRegistros();
 
-  const partes =
-    fechaTexto.split('-');
+        return;
+    }
 
 
-  const fecha =
-    new Date(
-      Number(partes[0]),
-      Number(partes[1]) - 1,
-      Number(partes[2])
-    );
+    const callback =
+        "callbackRegistros_" +
+        Date.now();
 
 
-  fecha.setDate(
-    fecha.getDate() +
-    termino
-  );
+    window[callback]=function(data){
+
+        registros =
+            Array.isArray(data)
+                ? data
+                : (
+                    data.registros ||
+                    data.data ||
+                    []
+                );
 
 
-  campo.value =
-    formatearFechaInput(
-      fecha
-    );
+        aplicarFiltros();
+
+        actualizarDashboard();
+
+
+        delete window[callback];
+
+    };
+
+
+    const script =
+        document.createElement("script");
+
+
+    script.src =
+        URL_API +
+        "?accion=listarRegistros" +
+        "&callback=" +
+        callback;
+
+
+    script.onerror=function(){
+
+        mostrarToast(
+            "No se pudieron cargar los registros.",
+            "error"
+        );
+
+    };
+
+
+    document.body.appendChild(script);
+
 }
 
 
 /* =========================================================
-   FORMATEAR FECHA INPUT
-   ========================================================= */
+   FILTROS
+========================================================= */
 
-function formatearFechaInput(
-  fecha
-) {
+function configurarFiltros(){
 
-  const y =
-    fecha.getFullYear();
+    const ids=[
 
+        "filtroRadicado",
+        "filtroDocumento",
+        "filtroPeticionario",
+        "filtroFuncionario",
+        "filtroTipo",
+        "filtroEstado",
+        "filtroSemaforo",
+        "filtroDesde",
+        "filtroHasta"
 
-  const m =
-    String(
-      fecha.getMonth() + 1
-    ).padStart(
-      2,
-      '0'
-    );
-
-
-  const d =
-    String(
-      fecha.getDate()
-    ).padStart(
-      2,
-      '0'
-    );
+    ];
 
 
-  return (
-    y +
-    '-' +
-    m +
-    '-' +
-    d
-  );
+    ids.forEach(id=>{
+
+        const el =
+            document.getElementById(id);
+
+
+        if(!el){
+            return;
+        }
+
+
+        el.addEventListener(
+            "input",
+            aplicarFiltros
+        );
+
+
+        el.addEventListener(
+            "change",
+            aplicarFiltros
+        );
+
+    });
+
 }
 
 
-/* =========================================================
-   ACTUALIZAR ESTADO POR FECHA
-   ========================================================= */
+function aplicarFiltros(){
 
-function actualizarEstadoPorFecha() {
+    const radicado =
+        valor("filtroRadicado")
+        .toLowerCase();
 
-  const fechaRespuesta =
-    valor(
-      'fechaRespuesta'
-    );
+    const documento =
+        valor("filtroDocumento")
+        .toLowerCase();
 
+    const peticionario =
+        valor("filtroPeticionario")
+        .toLowerCase();
 
-  if (
-    fechaRespuesta
-  ) {
+    const funcionario =
+        valor("filtroFuncionario")
+        .toLowerCase();
+
+    const tipo =
+        valor("filtroTipo")
+        .toLowerCase();
 
     const estado =
-      document.getElementById(
-        'estado'
-      );
+        valor("filtroEstado")
+        .toLowerCase();
+
+    const semaforo =
+        valor("filtroSemaforo")
+        .toLowerCase();
+
+    const desde =
+        valor("filtroDesde");
+
+    const hasta =
+        valor("filtroHasta");
 
 
-    if (
-      estado &&
-      (
-        estado.value ===
-        'PENDIENTE' ||
-        estado.value ===
-        'EN TRÁMITE'
-      )
-    ) {
+    registrosFiltrados =
+        registros.filter(function(r){
 
-      estado.value =
-        'RESPONDIDO';
+            const rRadicado =
+                textoRegistro(
+                    r,
+                    [
+                        "radicado",
+                        "RADICADO",
+                        "idRadicado",
+                        "ID_RADICADO"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rDocumento =
+                textoRegistro(
+                    r,
+                    [
+                        "documento",
+                        "DOCUMENTO",
+                        "identificacion",
+                        "IDENTIFICACION"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rPeticionario =
+                textoRegistro(
+                    r,
+                    [
+                        "peticionario",
+                        "PETICIONARIO",
+                        "nombre",
+                        "NOMBRE"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rFuncionario =
+                textoRegistro(
+                    r,
+                    [
+                        "funcionario",
+                        "FUNCIONARIO",
+                        "responsable",
+                        "RESPONSABLE"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rTipo =
+                textoRegistro(
+                    r,
+                    [
+                        "tipoPeticion",
+                        "TIPO_PETICION",
+                        "tipo",
+                        "TIPO"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rEstado =
+                textoRegistro(
+                    r,
+                    [
+                        "estado",
+                        "ESTADO"
+                    ]
+                )
+                .toLowerCase();
+
+
+            const rSemaforo =
+                obtenerSemaforo(r)
+                .toLowerCase();
+
+
+            const fecha =
+                normalizarFecha(
+                    textoRegistro(
+                        r,
+                        [
+                            "fechaRecepcion",
+                            "FECHA_RECEPCION",
+                            "fecha",
+                            "FECHA"
+                        ]
+                    )
+                );
+
+
+            if(
+                radicado &&
+                !rRadicado.includes(radicado)
+            ){
+                return false;
+            }
+
+
+            if(
+                documento &&
+                !rDocumento.includes(documento)
+            ){
+                return false;
+            }
+
+
+            if(
+                peticionario &&
+                !rPeticionario.includes(peticionario)
+            ){
+                return false;
+            }
+
+
+            if(
+                funcionario &&
+                !rFuncionario.includes(funcionario)
+            ){
+                return false;
+            }
+
+
+            if(
+                tipo &&
+                !rTipo.includes(tipo)
+            ){
+                return false;
+            }
+
+
+            if(
+                estado &&
+                rEstado!==estado
+            ){
+                return false;
+            }
+
+
+            if(
+                semaforo &&
+                rSemaforo!==semaforo
+            ){
+                return false;
+            }
+
+
+            if(
+                desde &&
+                fecha &&
+                fecha<desde
+            ){
+                return false;
+            }
+
+
+            if(
+                hasta &&
+                fecha &&
+                fecha>hasta
+            ){
+                return false;
+            }
+
+
+            return true;
+
+        });
+
+
+    renderizarTabla();
+
+}
+
+
+/* =========================================================
+   TEXTO REGISTRO
+========================================================= */
+
+function textoRegistro(r,campos){
+
+    for(const campo of campos){
+
+        if(
+            r &&
+            r[campo]!==undefined &&
+            r[campo]!==null
+        ){
+
+            return String(
+                r[campo]
+            );
+
+        }
+
     }
-  }
+
+    return "";
+
 }
 
 
 /* =========================================================
-   MOSTRAR SECCIÓN
-   ========================================================= */
+   NORMALIZAR FECHA
+========================================================= */
 
-function mostrarSeccion(
-  seccion,
-  boton
-) {
+function normalizarFecha(valorFecha){
 
-  document
-    .querySelectorAll(
-      '.section'
-    )
-    .forEach(
-      function(elemento) {
-
-        elemento.classList.remove(
-          'active'
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      '.tab'
-    )
-    .forEach(
-      function(elemento) {
-
-        elemento.classList.remove(
-          'active'
-        );
-
-      }
-    );
-
-
-  if (
-    seccion ===
-    'registro'
-  ) {
-
-    document
-      .getElementById(
-        'seccionRegistro'
-      )
-      .classList
-      .add(
-        'active'
-      );
-
-  } else {
-
-    document
-      .getElementById(
-        'seccionSeguimiento'
-      )
-      .classList
-      .add(
-        'active'
-      );
-
-    aplicarFiltros();
-  }
-
-
-  if (
-    boton
-  ) {
-
-    boton.classList.add(
-      'active'
-    );
-  }
-}
-
-
-/* =========================================================
-   IR A SEGUIMIENTO
-   ========================================================= */
-
-function irSeguimiento() {
-
-  const tabs =
-    document.querySelectorAll(
-      '.tab'
-    );
-
-
-  mostrarSeccion(
-    'seguimiento',
-    tabs[1]
-  );
-}
-
-
-/* =========================================================
-   APLICAR FILTROS
-   ========================================================= */
-
-function aplicarFiltros() {
-
-  const radicado =
-    valor(
-      'filtroRadicado'
-    )
-    .toLowerCase()
-    .trim();
-
-
-  const documento =
-    valor(
-      'filtroDocumento'
-    )
-    .toLowerCase()
-    .trim();
-
-
-  const peticionario =
-    valor(
-      'filtroPeticionario'
-    )
-    .toLowerCase()
-    .trim();
-
-
-  const funcionario =
-    valor(
-      'filtroFuncionario'
-    );
-
-
-  const tipo =
-    valor(
-      'filtroTipo'
-    );
-
-
-  const estado =
-    valor(
-      'filtroEstado'
-    );
-
-
-  const semaforo =
-    valor(
-      'filtroSemaforo'
-    );
-
-
-  const desde =
-    valor(
-      'filtroDesde'
-    );
-
-
-  const hasta =
-    valor(
-      'filtroHasta'
-    );
-
-
-  registrosFiltrados =
-    registros.filter(
-      function(r) {
-
-        const rRadicado =
-          String(
-            r[
-              'ID / Radicado'
-            ] || ''
-          )
-          .toLowerCase();
-
-
-        const rDocumento =
-          String(
-            r[
-              'Documento / Identificación'
-            ] || ''
-          )
-          .toLowerCase();
-
-
-        const rPeticionario =
-          String(
-            r[
-              'Peticionario'
-            ] || ''
-          )
-          .toLowerCase();
-
-
-        const rFuncionario =
-          String(
-            r[
-              'Funcionario responsable'
-            ] || ''
-          );
-
-
-        const rTipo =
-          String(
-            r[
-              'Tipo de petición'
-            ] || ''
-          );
-
-
-        const rEstado =
-          String(
-            r[
-              'Estado'
-            ] || ''
-          );
-
-
-        const rSemaforo =
-          String(
-            r[
-              'Semáforo'
-            ] || ''
-          );
-
-
-        const rFecha =
-          String(
-            r[
-              'Fecha recepción'
-            ] || ''
-          );
-
-
-        if (
-          radicado &&
-          !rRadicado.includes(
-            radicado
-          )
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          documento &&
-          !rDocumento.includes(
-            documento
-          )
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          peticionario &&
-          !rPeticionario.includes(
-            peticionario
-          )
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          funcionario &&
-          rFuncionario !==
-          funcionario
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          tipo &&
-          rTipo !==
-          tipo
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          estado &&
-          rEstado !==
-          estado
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          semaforo &&
-          !rSemaforo.includes(
-            semaforo
-          )
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          desde &&
-          rFecha <
-          desde
-        ) {
-
-          return false;
-        }
-
-
-        if (
-          hasta &&
-          rFecha >
-          hasta
-        ) {
-
-          return false;
-        }
-
-
-        return true;
-      }
-    );
-
-
-  renderizarTabla(
-    registrosFiltrados
-  );
-}
-
-
-/* =========================================================
-   RENDERIZAR TABLA
-   ========================================================= */
-
-function renderizarTabla(
-  data
-) {
-
-  const tbody =
-    document.getElementById(
-      'tablaRegistros'
-    );
-
-
-  if (
-    !tbody
-  ) {
-
-    return;
-  }
-
-
-  tbody.innerHTML =
-    '';
-
-
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    tbody.innerHTML = `
-      <tr>
-        <td
-          colspan="12"
-          style="text-align:center;padding:25px"
-        >
-          No se encontraron registros.
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-
-  data.forEach(
-    function(registro, indice) {
-
-      const tr =
-        document.createElement(
-          'tr'
-        );
-
-
-      tr.innerHTML = `
-
-        <td>
-          ${escaparHTML(
-            registro['Consecutivo']
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro['ID / Radicado']
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro['Fecha recepción']
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro['Peticionario']
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro[
-              'Documento / Identificación'
-            ]
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro[
-              'Tipo de petición'
-            ]
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro[
-              'Funcionario responsable'
-            ]
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro[
-              'Fecha límite de respuesta'
-            ]
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro[
-              'Días restantes'
-            ]
-          )}
-        </td>
-
-        <td>
-          ${crearBadgeSemaforo(
-            registro['Semáforo']
-          )}
-        </td>
-
-        <td>
-          ${crearBadgeEstado(
-            registro['Estado']
-          )}
-        </td>
-
-        <td>
-
-          <div style="
-            display:flex;
-            gap:5px;
-          ">
-
-            <button
-              class="btn btn-small btn-primary"
-              onclick="verDetalle(${indice})"
-            >
-              Ver
-            </button>
-
-            <button
-              class="btn btn-small btn-secondary"
-              onclick="editarRegistro(${indice})"
-            >
-              Editar
-            </button>
-
-          </div>
-
-        </td>
-
-      `;
-
-
-      tbody.appendChild(
-        tr
-      );
+    if(!valorFecha){
+        return "";
     }
-  );
+
+
+    let fecha =
+        String(valorFecha);
+
+
+    if(fecha.includes("T")){
+
+        fecha =
+            fecha.split("T")[0];
+
+    }
+
+
+    if(
+        /^\d{1,2}\/\d{1,2}\/\d{4}$/
+        .test(fecha)
+    ){
+
+        const partes =
+            fecha.split("/");
+
+        return (
+            partes[2] +
+            "-" +
+            partes[1].padStart(2,"0") +
+            "-" +
+            partes[0].padStart(2,"0")
+        );
+
+    }
+
+
+    return fecha;
+
 }
 
 
 /* =========================================================
-   ESCAPAR HTML
-   ========================================================= */
+   SEMÁFORO
+========================================================= */
 
-function escaparHTML(
-  valor
-) {
+function obtenerSemaforo(r){
 
-  return String(
-    valor === null ||
-    valor === undefined
-      ? ''
-      : valor
-  )
-  .replace(
-    /&/g,
-    '&amp;'
-  )
-  .replace(
-    /</g,
-    '&lt;'
-  )
-  .replace(
-    />/g,
-    '&gt;'
-  )
-  .replace(
-    /"/g,
-    '&quot;'
-  )
-  .replace(
-    /'/g,
-    '&#039;'
-  );
-}
+    let dias =
+        textoRegistro(
+            r,
+            [
+                "diasRestantes",
+                "DIAS_RESTANTES",
+                "dias",
+                "DIAS"
+            ]
+        );
 
 
-/* =========================================================
-   BADGE SEMÁFORO
-   ========================================================= */
+    if(dias!==""){
 
-function crearBadgeSemaforo(
-  semaforo
-) {
+        dias =
+            parseInt(dias);
 
-  const texto =
-    String(
-      semaforo || ''
+        if(!isNaN(dias)){
+
+            if(dias<0){
+                return "VENCIDO";
+            }
+
+            if(dias<=3){
+                return "POR VENCER";
+            }
+
+            return "A TIEMPO";
+
+        }
+
+    }
+
+
+    const fechaLimite =
+        normalizarFecha(
+            textoRegistro(
+                r,
+                [
+                    "fechaLimite",
+                    "FECHA_LIMITE"
+                ]
+            )
+        );
+
+
+    if(!fechaLimite){
+        return "";
+    }
+
+
+    const hoy =
+        new Date();
+
+    hoy.setHours(
+        0,0,0,0
     );
 
 
-  let clase =
-    'badge-termino';
+    const limite =
+        new Date(
+            fechaLimite+"T00:00:00"
+        );
 
 
-  if (
-    texto.includes(
-      'VENCIDO'
-    )
-  ) {
-
-    clase =
-      'badge-vencido';
-
-  } else if (
-    texto.includes(
-      'PRÓXIMO'
-    )
-  ) {
-
-    clase =
-      'badge-proximo';
-
-  } else if (
-    texto.includes(
-      'RESPONDIDO'
-    )
-  ) {
-
-    clase =
-      'badge-respondido';
-  }
+    const diferencia =
+        Math.ceil(
+            (
+                limite-hoy
+            ) /
+            86400000
+        );
 
 
-  return `
-    <span class="badge ${clase}">
-      ${escaparHTML(texto)}
-    </span>
-  `;
+    if(diferencia<0){
+        return "VENCIDO";
+    }
+
+    if(diferencia<=3){
+        return "POR VENCER";
+    }
+
+    return "A TIEMPO";
+
+}
+
+
+/* =========================================================
+   DÍAS RESTANTES
+========================================================= */
+
+function obtenerDiasRestantes(r){
+
+    let dias =
+        textoRegistro(
+            r,
+            [
+                "diasRestantes",
+                "DIAS_RESTANTES",
+                "dias",
+                "DIAS"
+            ]
+        );
+
+
+    if(dias!==""){
+        return parseInt(dias);
+    }
+
+
+    const fechaLimite =
+        normalizarFecha(
+            textoRegistro(
+                r,
+                [
+                    "fechaLimite",
+                    "FECHA_LIMITE"
+                ]
+            )
+        );
+
+
+    if(!fechaLimite){
+        return "";
+    }
+
+
+    const hoy =
+        new Date();
+
+    hoy.setHours(0,0,0,0);
+
+
+    const limite =
+        new Date(
+            fechaLimite+"T00:00:00"
+        );
+
+
+    return Math.ceil(
+        (
+            limite-hoy
+        ) /
+        86400000
+    );
+
+}
+
+
+/* =========================================================
+   RENDER TABLA
+========================================================= */
+
+function renderizarTabla(){
+
+    const tbody =
+        document.getElementById(
+            "tablaRegistros"
+        );
+
+
+    if(
+        !tbody ||
+        !registrosFiltrados.length
+    ){
+
+        tbody.innerHTML=`
+
+            <tr>
+
+                <td colspan="12">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2">
+
+                                <path d="M4 5h16v14H4z"/>
+
+                                <path d="M8 9h8"/>
+
+                                <path d="M8 13h5"/>
+
+                            </svg>
+
+                        </div>
+
+                        <h3>
+                            No se encontraron registros
+                        </h3>
+
+                        <p>
+                            Ajuste los filtros o registre una nueva petición.
+                        </p>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        registrosFiltrados
+        .map(function(r,i){
+
+            const consecutivo =
+                textoRegistro(
+                    r,
+                    [
+                        "consecutivo",
+                        "CONSECUTIVO"
+                    ]
+                );
+
+
+            const radicado =
+                textoRegistro(
+                    r,
+                    [
+                        "radicado",
+                        "RADICADO"
+                    ]
+                );
+
+
+            const recepcion =
+                formatearFecha(
+                    textoRegistro(
+                        r,
+                        [
+                            "fechaRecepcion",
+                            "FECHA_RECEPCION"
+                        ]
+                    )
+                );
+
+
+            const peticionario =
+                textoRegistro(
+                    r,
+                    [
+                        "peticionario",
+                        "PETICIONARIO"
+                    ]
+                );
+
+
+            const documento =
+                textoRegistro(
+                    r,
+                    [
+                        "documento",
+                        "DOCUMENTO",
+                        "identificacion",
+                        "IDENTIFICACION"
+                    ]
+                );
+
+
+            const tipo =
+                textoRegistro(
+                    r,
+                    [
+                        "tipoPeticion",
+                        "TIPO_PETICION",
+                        "tipo",
+                        "TIPO"
+                    ]
+                );
+
+
+            const funcionario =
+                textoRegistro(
+                    r,
+                    [
+                        "funcionario",
+                        "FUNCIONARIO"
+                    ]
+                );
+
+
+            const fechaLimite =
+                formatearFecha(
+                    textoRegistro(
+                        r,
+                        [
+                            "fechaLimite",
+                            "FECHA_LIMITE"
+                        ]
+                    )
+                );
+
+
+            const dias =
+                obtenerDiasRestantes(r);
+
+
+            const semaforo =
+                obtenerSemaforo(r);
+
+
+            const estado =
+                textoRegistro(
+                    r,
+                    [
+                        "estado",
+                        "ESTADO"
+                    ]
+                );
+
+
+            return `
+
+<tr>
+
+<td>
+    <strong>${escapeHTML(consecutivo)}</strong>
+</td>
+
+<td>
+    ${escapeHTML(radicado)}
+</td>
+
+<td>
+    ${escapeHTML(recepcion)}
+</td>
+
+<td>
+    ${escapeHTML(peticionario)}
+</td>
+
+<td>
+    ${escapeHTML(documento)}
+</td>
+
+<td>
+    ${escapeHTML(tipo)}
+</td>
+
+<td>
+    ${escapeHTML(funcionario)}
+</td>
+
+<td>
+    ${escapeHTML(fechaLimite)}
+</td>
+
+<td>
+    ${formatearDias(dias)}
+</td>
+
+<td>
+    ${badgeSemaforo(semaforo)}
+</td>
+
+<td>
+    ${badgeEstado(estado)}
+</td>
+
+<td>
+
+<div class="actions">
+
+<button
+    class="action-btn"
+    title="Ver detalle"
+    onclick="verDetalle(${i})">
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+
+        <circle cx="12"
+                cy="12"
+                r="3"/>
+
+    </svg>
+
+</button>
+
+
+<button
+    class="action-btn"
+    title="Editar"
+    onclick="editarRegistro(${i})">
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+
+        <path d="M12 20h9"/>
+
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+
+    </svg>
+
+</button>
+
+
+<button
+    class="action-btn"
+    title="Generar PDF"
+    onclick="generarPDF(${i})">
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+
+        <path d="M14 2v6h6"/>
+
+        <path d="M8 13h8"/>
+
+        <path d="M8 17h6"/>
+
+    </svg>
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+        })
+        .join("");
+
 }
 
 
 /* =========================================================
    BADGE ESTADO
-   ========================================================= */
+========================================================= */
 
-function crearBadgeEstado(
-  estado
-) {
+function badgeEstado(estado){
 
-  return `
-    <span class="badge badge-estado">
-      ${escaparHTML(
-        estado || ''
-      )}
-    </span>
-  `;
-}
+    const e =
+        String(estado || "")
+        .toUpperCase();
 
 
-/* =========================================================
-   VER DETALLE
-   ========================================================= */
-
-function verDetalle(
-  indice
-) {
-
-  const registro =
-    registrosFiltrados[
-      indice
-    ];
+    let clase =
+        "badge-pendiente";
 
 
-  if (
-    !registro
-  ) {
+    if(e.includes("TRÁMITE") || e.includes("TRAMITE")){
 
-    return;
-  }
+        clase="badge-tramite";
 
-
-  const contenido =
-    document.getElementById(
-      'detalleContenido'
-    );
-
-
-  const campos = [
-
-    [
-      'Consecutivo',
-      'Consecutivo'
-    ],
-
-    [
-      'ID / Radicado',
-      'ID / Radicado'
-    ],
-
-    [
-      'Fecha de recepción',
-      'Fecha recepción'
-    ],
-
-    [
-      'Peticionario',
-      'Peticionario'
-    ],
-
-    [
-      'Documento',
-      'Documento / Identificación'
-    ],
-
-    [
-      'Teléfono',
-      'Teléfono'
-    ],
-
-    [
-      'Correo',
-      'Correo'
-    ],
-
-    [
-      'Tipo de petición',
-      'Tipo de petición'
-    ],
-
-    [
-      'Asunto',
-      'Asunto'
-    ],
-
-    [
-      'Funcionario responsable',
-      'Funcionario responsable'
-    ],
-
-    [
-      'Término',
-      'Término (días)'
-    ],
-
-    [
-      'Fecha límite',
-      'Fecha límite de respuesta'
-    ],
-
-    [
-      'Días transcurridos',
-      'Días transcurridos'
-    ],
-
-    [
-      'Días restantes',
-      'Días restantes'
-    ],
-
-    [
-      'Semáforo',
-      'Semáforo'
-    ],
-
-    [
-      'Estado',
-      'Estado'
-    ],
-
-    [
-      'Fecha de respuesta',
-      'Fecha de respuesta'
-    ],
-
-    [
-      'Medio de respuesta',
-      'Medio de respuesta'
-    ],
-
-    [
-      'Días utilizados',
-      'Días utilizados'
-    ],
-
-    [
-      'Cumplimiento',
-      'Cumplimiento'
-    ],
-
-    [
-      'Observaciones',
-      'Observaciones'
-    ]
-
-  ];
-
-
-  let html =
-    '<div class="detalle-grid">';
-
-
-  campos.forEach(
-    function(campo) {
-
-      const etiqueta =
-        campo[0];
-
-      const clave =
-        campo[1];
-
-
-      const valorCampo =
-        registro[
-          clave
-        ] !== undefined
-          ? registro[
-              clave
-            ]
-          : '';
-
-
-      const clase =
-        clave ===
-        'Observaciones'
-          ? 'detalle-item full'
-          : 'detalle-item';
-
-
-      html += `
-
-        <div class="${clase}">
-
-          <span class="detalle-label">
-            ${escaparHTML(
-              etiqueta
-            )}
-          </span>
-
-          <div class="detalle-value">
-            ${escaparHTML(
-              valorCampo
-            )}
-          </div>
-
-        </div>
-
-      `;
     }
-  );
+
+    else if(e.includes("RESPOND")){
+
+        clase="badge-respondido";
+
+    }
+
+    else if(e.includes("CERR")){
+
+        clase="badge-cerrado";
+
+    }
 
 
-  html +=
-    '</div>';
+    return `
+        <span class="badge ${clase}">
+            ${escapeHTML(e)}
+        </span>
+    `;
 
-
-  contenido.innerHTML =
-    html;
-
-
-  document
-    .getElementById(
-      'modalDetalle'
-    )
-    .classList
-    .add(
-      'show'
-    );
 }
 
 
 /* =========================================================
-   EDITAR
-   ========================================================= */
+   BADGE SEMÁFORO
+========================================================= */
 
-function editarRegistro(
-  indice
-) {
+function badgeSemaforo(semaforo){
 
-  const registro =
-    registrosFiltrados[
-      indice
-    ];
+    const s =
+        String(semaforo || "")
+        .toUpperCase();
 
 
-  if (
-    !registro
-  ) {
+    if(s==="VENCIDO"){
 
-    return;
-  }
+        return `
+            <span class="semaforo rojo">
+                VENCIDO
+            </span>
+        `;
 
-
-  mostrarSeccion(
-    'registro',
-    document.querySelector(
-      '.tab'
-    )
-  );
+    }
 
 
-  document
-    .getElementById(
-      'modoEdicion'
-    )
-    .classList
-    .remove(
-      'hidden'
-    );
+    if(s==="POR VENCER"){
+
+        return `
+            <span class="semaforo amarillo">
+                POR VENCER
+            </span>
+        `;
+
+    }
 
 
-  document
-    .getElementById(
-      'filaEdicion'
-    )
-    .value =
-    registro.fila ||
-    '';
+    if(s==="A TIEMPO"){
+
+        return `
+            <span class="semaforo verde">
+                A TIEMPO
+            </span>
+        `;
+
+    }
 
 
-  asignar(
-    'consecutivo',
-    registro[
-      'Consecutivo'
-    ]
-  );
+    return "";
 
-
-  asignar(
-    'radicado',
-    registro[
-      'ID / Radicado'
-    ]
-  );
-
-
-  asignar(
-    'fechaRecepcion',
-    registro[
-      'Fecha recepción'
-    ]
-  );
-
-
-  asignar(
-    'peticionario',
-    registro[
-      'Peticionario'
-    ]
-  );
-
-
-  asignar(
-    'documento',
-    registro[
-      'Documento / Identificación'
-    ]
-  );
-
-
-  asignar(
-    'telefono',
-    registro[
-      'Teléfono'
-    ]
-  );
-
-
-  asignar(
-    'correo',
-    registro[
-      'Correo'
-    ]
-  );
-
-
-  asignar(
-    'tipoPeticion',
-    registro[
-      'Tipo de petición'
-    ]
-  );
-
-
-  asignar(
-    'asunto',
-    registro[
-      'Asunto'
-    ]
-  );
-
-
-  asignar(
-    'funcionario',
-    registro[
-      'Funcionario responsable'
-    ]
-  );
-
-
-  asignar(
-    'termino',
-    registro[
-      'Término (días)'
-    ]
-  );
-
-
-  asignar(
-    'fechaLimite',
-    registro[
-      'Fecha límite de respuesta'
-    ]
-  );
-
-
-  asignar(
-    'estado',
-    registro[
-      'Estado'
-    ]
-  );
-
-
-  asignar(
-    'fechaRespuesta',
-    registro[
-      'Fecha de respuesta'
-    ]
-  );
-
-
-  asignar(
-    'medioRespuesta',
-    registro[
-      'Medio de respuesta'
-    ]
-  );
-
-
-  asignar(
-    'observaciones',
-    registro[
-      'Observaciones'
-    ]
-  );
-
-
-  const boton =
-    document.getElementById(
-      'btnGuardar'
-    );
-
-
-  boton.textContent =
-    'Actualizar registro';
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-
-  calcularFechaLimite();
-
-
-  mostrarToast(
-    'Registro cargado para edición.',
-    'success'
-  );
 }
 
 
 /* =========================================================
-   ASIGNAR
-   ========================================================= */
+   DÍAS
+========================================================= */
 
-function asignar(
-  id,
-  valorAsignado
-) {
+function formatearDias(dias){
 
-  const elemento =
-    document.getElementById(
-      id
-    );
+    if(
+        dias === "" ||
+        dias === null ||
+        isNaN(dias)
+    ){
+
+        return "-";
+
+    }
 
 
-  if (
-    elemento
-  ) {
+    dias=parseInt(dias);
 
-    elemento.value =
-      valorAsignado ===
-      null ||
-      valorAsignado ===
-      undefined
-        ? ''
-        : valorAsignado;
-  }
+
+    if(dias<0){
+
+        return `
+            <span style="color:#d93025;font-weight:800">
+                ${dias}
+            </span>
+        `;
+
+    }
+
+
+    if(dias<=3){
+
+        return `
+            <span style="color:#a46a00;font-weight:800">
+                ${dias}
+            </span>
+        `;
+
+    }
+
+
+    return `
+        <span style="color:#188038;font-weight:750">
+            ${dias}
+        </span>
+    `;
+
 }
 
 
 /* =========================================================
-   CERRAR MODAL DETALLE
-   ========================================================= */
+   FECHA
+========================================================= */
 
-function cerrarModalDetalle() {
+function formatearFecha(fecha){
 
-  document
-    .getElementById(
-      'modalDetalle'
-    )
-    .classList
-    .remove(
-      'show'
-    );
-}
+    if(!fecha){
+        return "";
+    }
 
 
-/* =========================================================
-   LIMPIAR FILTROS
-   ========================================================= */
+    const normalizada =
+        normalizarFecha(fecha);
 
-function limpiarFiltros() {
 
-  [
-    'filtroRadicado',
-    'filtroDocumento',
-    'filtroPeticionario',
-    'filtroFuncionario',
-    'filtroTipo',
-    'filtroEstado',
-    'filtroSemaforo',
-    'filtroDesde',
-    'filtroHasta'
-  ].forEach(
-    function(id) {
+    if(
+        /^\d{4}-\d{2}-\d{2}$/
+        .test(normalizada)
+    ){
 
-      const elemento =
-        document.getElementById(
-          id
+        const p =
+            normalizada.split("-");
+
+
+        return (
+            p[2] +
+            "/" +
+            p[1] +
+            "/" +
+            p[0]
         );
 
-
-      if (
-        elemento
-      ) {
-
-        elemento.value =
-          '';
-      }
     }
-  );
 
 
-  aplicarFiltros();
+    return fecha;
+
 }
 
 
 /* =========================================================
    DASHBOARD
-   ========================================================= */
+========================================================= */
 
-function actualizarDashboard(
-  dashboard
-) {
+function actualizarDashboard(){
 
-  if (
-    !dashboard
-  ) {
-
-    return;
-  }
+    const total =
+        registros.length;
 
 
-  establecerTexto(
-    'totalRegistros',
-    dashboard.total || 0
-  );
+    let pendientes=0;
+    let tramite=0;
+    let respondidas=0;
+    let vencidas=0;
 
 
-  establecerTexto(
-    'totalPendientes',
-    dashboard.pendientes || 0
-  );
+    registros.forEach(function(r){
+
+        const estado =
+            textoRegistro(
+                r,
+                [
+                    "estado",
+                    "ESTADO"
+                ]
+            )
+            .toUpperCase();
 
 
-  establecerTexto(
-    'totalTramite',
-    dashboard.enTramite || 0
-  );
+        if(estado==="PENDIENTE"){
+            pendientes++;
+        }
 
 
-  establecerTexto(
-    'totalRespondidas',
-    dashboard.respondidas || 0
-  );
+        if(
+            estado==="EN TRÁMITE" ||
+            estado==="EN TRAMITE"
+        ){
+            tramite++;
+        }
 
 
-  establecerTexto(
-    'totalVencidas',
-    dashboard.vencidas || 0
-  );
+        if(
+            estado==="RESPONDIDO" ||
+            estado==="CERRADO"
+        ){
+            respondidas++;
+        }
+
+
+        if(
+            obtenerSemaforo(r)==="VENCIDO"
+        ){
+            vencidas++;
+        }
+
+    });
+
+
+    animarNumero(
+        "kpiTotal",
+        total
+    );
+
+    animarNumero(
+        "kpiPendientes",
+        pendientes
+    );
+
+    animarNumero(
+        "kpiTramite",
+        tramite
+    );
+
+    animarNumero(
+        "kpiRespondidas",
+        respondidas
+    );
+
+    animarNumero(
+        "kpiVencidas",
+        vencidas
+    );
+
 }
 
 
 /* =========================================================
-   ESTABLECER TEXTO
-   ========================================================= */
+   ANIMACIÓN NÚMEROS
+========================================================= */
 
-function establecerTexto(
-  id,
-  texto
-) {
+function animarNumero(id,valorFinal){
 
-  const elemento =
-    document.getElementById(
-      id
+    const el =
+        document.getElementById(id);
+
+
+    if(!el){
+        return;
+    }
+
+
+    const inicio =
+        parseInt(el.textContent) || 0;
+
+
+    if(inicio===valorFinal){
+
+        el.textContent=valorFinal;
+
+        return;
+
+    }
+
+
+    const duracion=350;
+
+    const inicioTiempo=
+        performance.now();
+
+
+    function animar(tiempo){
+
+        const progreso =
+            Math.min(
+                (tiempo-inicioTiempo) /
+                duracion,
+                1
+            );
+
+
+        const valor =
+            Math.round(
+                inicio +
+                (
+                    valorFinal-inicio
+                ) *
+                progreso
+            );
+
+
+        el.textContent=valor;
+
+
+        if(progreso<1){
+
+            requestAnimationFrame(
+                animar
+            );
+
+        }
+
+    }
+
+
+    requestAnimationFrame(animar);
+
+}
+
+
+/* =========================================================
+   VER DETALLE
+========================================================= */
+
+function verDetalle(indice){
+
+    const registro =
+        registrosFiltrados[indice];
+
+
+    if(!registro){
+        return;
+    }
+
+
+    detalleActual=registro;
+
+
+    const contenido =
+        document.getElementById(
+            "detalleContenido"
+        );
+
+
+    const campos=[
+
+        [
+            "Consecutivo",
+            textoRegistro(
+                registro,
+                [
+                    "consecutivo",
+                    "CONSECUTIVO"
+                ]
+            )
+        ],
+
+        [
+            "Radicado",
+            textoRegistro(
+                registro,
+                [
+                    "radicado",
+                    "RADICADO"
+                ]
+            )
+        ],
+
+        [
+            "Fecha de recepción",
+            formatearFecha(
+                textoRegistro(
+                    registro,
+                    [
+                        "fechaRecepcion",
+                        "FECHA_RECEPCION"
+                    ]
+                )
+            )
+        ],
+
+        [
+            "Peticionario",
+            textoRegistro(
+                registro,
+                [
+                    "peticionario",
+                    "PETICIONARIO"
+                ]
+            )
+        ],
+
+        [
+            "Documento",
+            textoRegistro(
+                registro,
+                [
+                    "documento",
+                    "DOCUMENTO",
+                    "identificacion",
+                    "IDENTIFICACION"
+                ]
+            )
+        ],
+
+        [
+            "Teléfono",
+            textoRegistro(
+                registro,
+                [
+                    "telefono",
+                    "TELEFONO"
+                ]
+            )
+        ],
+
+        [
+            "Correo",
+            textoRegistro(
+                registro,
+                [
+                    "correo",
+                    "CORREO"
+                ]
+            )
+        ],
+
+        [
+            "Tipo de petición",
+            textoRegistro(
+                registro,
+                [
+                    "tipoPeticion",
+                    "TIPO_PETICION",
+                    "tipo",
+                    "TIPO"
+                ]
+            )
+        ],
+
+        [
+            "Funcionario",
+            textoRegistro(
+                registro,
+                [
+                    "funcionario",
+                    "FUNCIONARIO"
+                ]
+            )
+        ],
+
+        [
+            "Asunto",
+            textoRegistro(
+                registro,
+                [
+                    "asunto",
+                    "ASUNTO"
+                ]
+            )
+        ],
+
+        [
+            "Término",
+            textoRegistro(
+                registro,
+                [
+                    "termino",
+                    "TERMINO"
+                ]
+            )
+        ],
+
+        [
+            "Fecha límite",
+            formatearFecha(
+                textoRegistro(
+                    registro,
+                    [
+                        "fechaLimite",
+                        "FECHA_LIMITE"
+                    ]
+                )
+            )
+        ],
+
+        [
+            "Estado",
+            textoRegistro(
+                registro,
+                [
+                    "estado",
+                    "ESTADO"
+                ]
+            )
+        ],
+
+        [
+            "Fecha respuesta",
+            formatearFecha(
+                textoRegistro(
+                    registro,
+                    [
+                        "fechaRespuesta",
+                        "FECHA_RESPUESTA"
+                    ]
+                )
+            )
+        ],
+
+        [
+            "Medio de respuesta",
+            textoRegistro(
+                registro,
+                [
+                    "medioRespuesta",
+                    "MEDIO_RESPUESTA"
+                ]
+            )
+        ],
+
+        [
+            "Observaciones",
+            textoRegistro(
+                registro,
+                [
+                    "observaciones",
+                    "OBSERVACIONES"
+                ]
+            )
+        ]
+
+    ];
+
+
+    contenido.innerHTML=
+
+        `<div class="detail-grid">` +
+
+        campos
+        .map(function(campo){
+
+            const full =
+                campo[0]==="Asunto" ||
+                campo[0]==="Observaciones";
+
+
+            return `
+
+                <div class="detail-item ${full ? "full":""}">
+
+                    <div class="detail-label">
+                        ${escapeHTML(campo[0])}
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHTML(
+                            campo[1] || "-"
+                        )}
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("") +
+
+        `</div>`;
+
+
+    abrirModal(
+        "modalDetalle"
+    );
+
+}
+
+
+/* =========================================================
+   EDITAR
+========================================================= */
+
+function editarRegistro(indice){
+
+    const registro =
+        registrosFiltrados[indice];
+
+
+    if(!registro){
+        return;
+    }
+
+
+    registroEditando=registro;
+
+
+    cerrarModal(
+        "modalDetalle"
     );
 
 
-  if (
-    elemento
-  ) {
+    mostrarTab(
+        "registro",
+        document.querySelector(
+            ".tab"
+        )
+    );
 
-    elemento.textContent =
-      texto;
-  }
+
+    establecerValor(
+        "consecutivo",
+        textoRegistro(
+            registro,
+            [
+                "consecutivo",
+                "CONSECUTIVO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "radicado",
+        textoRegistro(
+            registro,
+            [
+                "radicado",
+                "RADICADO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "fechaRecepcion",
+        normalizarFecha(
+            textoRegistro(
+                registro,
+                [
+                    "fechaRecepcion",
+                    "FECHA_RECEPCION"
+                ]
+            )
+        )
+    );
+
+
+    establecerValor(
+        "peticionario",
+        textoRegistro(
+            registro,
+            [
+                "peticionario",
+                "PETICIONARIO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "documento",
+        textoRegistro(
+            registro,
+            [
+                "documento",
+                "DOCUMENTO",
+                "identificacion",
+                "IDENTIFICACION"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "telefono",
+        textoRegistro(
+            registro,
+            [
+                "telefono",
+                "TELEFONO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "correo",
+        textoRegistro(
+            registro,
+            [
+                "correo",
+                "CORREO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "tipoPeticion",
+        textoRegistro(
+            registro,
+            [
+                "tipoPeticion",
+                "TIPO_PETICION",
+                "tipo",
+                "TIPO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "funcionario",
+        textoRegistro(
+            registro,
+            [
+                "funcionario",
+                "FUNCIONARIO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "asunto",
+        textoRegistro(
+            registro,
+            [
+                "asunto",
+                "ASUNTO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "termino",
+        textoRegistro(
+            registro,
+            [
+                "termino",
+                "TERMINO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "fechaLimite",
+        normalizarFecha(
+            textoRegistro(
+                registro,
+                [
+                    "fechaLimite",
+                    "FECHA_LIMITE"
+                ]
+            )
+        )
+    );
+
+
+    establecerValor(
+        "estado",
+        textoRegistro(
+            registro,
+            [
+                "estado",
+                "ESTADO"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "fechaRespuesta",
+        normalizarFecha(
+            textoRegistro(
+                registro,
+                [
+                    "fechaRespuesta",
+                    "FECHA_RESPUESTA"
+                ]
+            )
+        )
+    );
+
+
+    establecerValor(
+        "medioRespuesta",
+        textoRegistro(
+            registro,
+            [
+                "medioRespuesta",
+                "MEDIO_RESPUESTA"
+            ]
+        )
+    );
+
+
+    establecerValor(
+        "observaciones",
+        textoRegistro(
+            registro,
+            [
+                "observaciones",
+                "OBSERVACIONES"
+            ]
+        )
+    );
+
+
+    const btn =
+        document.getElementById(
+            "btnGuardar"
+        );
+
+
+    btn.innerHTML=`
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2">
+
+            <path d="M12 20h9"/>
+
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+
+        </svg>
+
+        Actualizar petición
+
+    `;
+
+
+    document
+        .getElementById("radicado")
+        .focus();
+
+}
+
+
+/* =========================================================
+   ESTABLECER VALOR
+========================================================= */
+
+function establecerValor(id,valor){
+
+    const el =
+        document.getElementById(id);
+
+
+    if(el){
+        el.value =
+            valor || "";
+    }
+
+}
+
+
+/* =========================================================
+   EDITAR DESDE DETALLE
+========================================================= */
+
+function editarDesdeDetalle(){
+
+    if(!detalleActual){
+        return;
+    }
+
+
+    const indice =
+        registrosFiltrados.indexOf(
+            detalleActual
+        );
+
+
+    if(indice>=0){
+
+        editarRegistro(indice);
+
+    }
+
 }
 
 
 /* =========================================================
    GENERAR PDF
-   ========================================================= */
+========================================================= */
 
-function generarPDF() {
+function generarPDF(indice){
 
-  const filtros = {
-
-    radicado:
-      valor(
-        'filtroRadicado'
-      ),
-
-    documento:
-      valor(
-        'filtroDocumento'
-      ),
-
-    peticionario:
-      valor(
-        'filtroPeticionario'
-      ),
-
-    funcionario:
-      valor(
-        'filtroFuncionario'
-      ),
-
-    tipo:
-      valor(
-        'filtroTipo'
-      ),
-
-    estado:
-      valor(
-        'filtroEstado'
-      ),
-
-    semaforo:
-      valor(
-        'filtroSemaforo'
-      ),
-
-    desde:
-      valor(
-        'filtroDesde'
-      ),
-
-    hasta:
-      valor(
-        'filtroHasta'
-      )
-  };
+    const registro =
+        registrosFiltrados[indice];
 
 
-  if (
-    filtros.desde &&
-    filtros.hasta &&
-    filtros.desde >
-    filtros.hasta
-  ) {
+    if(!registro){
+        return;
+    }
 
-    mostrarToast(
-      'La fecha DESDE no puede ser mayor que HASTA.',
-      'warning'
+
+    mostrarLoading(
+        "Generando documento PDF..."
     );
 
-    return;
-  }
 
+    if(!ES_APPS_SCRIPT){
 
-  /**
-   * El PDF necesita respuesta del servidor.
-   *
-   * Si estamos dentro de Apps Script, funciona
-   * directamente con google.script.run.
-   *
-   * Desde GitHub Pages, el POST es no-cors y no
-   * permite recuperar el PDF. Por eso informamos
-   * al usuario.
-   */
-  if (
-    !usarGoogleScriptRun()
-  ) {
-
-    mostrarToast(
-      'La generación del PDF desde GitHub Pages requiere habilitar el método GET/JSONP para generar el PDF en el backend.',
-      'warning'
-    );
-
-    return;
-  }
-
-
-  mostrarLoading(
-    'Generando PDF...'
-  );
-
-
-  callBackend(
-    'generarReportePDF',
-    filtros,
-
-    function(resultado) {
-
-      ocultarLoading();
-
-
-      if (
-        !resultado ||
-        resultado.ok === false
-      ) {
+        ocultarLoading();
 
         mostrarToast(
-          resultado &&
-          resultado.mensaje
-            ? resultado.mensaje
-            : 'No fue posible generar el PDF.',
-          'error'
+            "La generación del PDF debe realizarse desde la aplicación de Apps Script.",
+            "warning"
         );
 
         return;
-      }
-
-
-      if (
-        !resultado.base64
-      ) {
-
-        mostrarToast(
-          'El servidor no devolvió el archivo PDF.',
-          'error'
-        );
-
-        return;
-      }
-
-
-      mostrarPDF(
-        resultado.base64,
-        resultado.nombre ||
-        'Reporte_Peticiones.pdf'
-      );
-
-    },
-
-    function(error) {
-
-      ocultarLoading();
-
-
-      mostrarToast(
-        'Error al generar el PDF: ' +
-        (
-          error.message ||
-          error
-        ),
-        'error'
-      );
 
     }
-  );
+
+
+    google.script.run
+
+        .withSuccessHandler(function(respuesta){
+
+            ocultarLoading();
+
+
+            if(
+                !respuesta ||
+                respuesta.exito===false
+            ){
+
+                mostrarToast(
+                    respuesta?.mensaje ||
+                    "No fue posible generar el PDF.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const base64 =
+                respuesta.base64 ||
+                respuesta.data ||
+                "";
+
+
+            if(!base64){
+
+                mostrarToast(
+                    "El servidor no devolvió el archivo PDF.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const blob =
+                base64ToBlob(
+                    base64,
+                    "application/pdf"
+                );
+
+
+            const url =
+                URL.createObjectURL(blob);
+
+
+            document
+                .getElementById("pdfViewer")
+                .src=url;
+
+
+            document
+                .getElementById("pdfViewer")
+                .dataset.url=url;
+
+
+            abrirModal(
+                "modalPDF"
+            );
+
+        })
+
+        .withFailureHandler(function(error){
+
+            ocultarLoading();
+
+            mostrarToast(
+                obtenerMensajeError(error),
+                "error"
+            );
+
+        })
+
+        .generarReportePDF(registro);
+
 }
 
 
 /* =========================================================
-   MOSTRAR PDF
-   ========================================================= */
+   BASE64 → BLOB
+========================================================= */
 
-function mostrarPDF(
-  base64,
-  nombre
-) {
-
-  try {
+function base64ToBlob(base64,tipo){
 
     const byteCharacters =
-      atob(
-        base64
-      );
+        atob(base64);
 
 
-    const byteNumbers =
-      new Array(
-        byteCharacters.length
-      );
+    const byteArrays=[];
 
 
-    for (
-      let i = 0;
-      i < byteCharacters.length;
-      i++
-    ) {
+    for(
+        let offset=0;
+        offset<byteCharacters.length;
+        offset+=512
+    ){
 
-      byteNumbers[i] =
-        byteCharacters.charCodeAt(
-          i
-        );
-    }
-
-
-    const byteArray =
-      new Uint8Array(
-        byteNumbers
-      );
+        const slice =
+            byteCharacters.slice(
+                offset,
+                offset+512
+            );
 
 
-    const blob =
-      new Blob(
-        [byteArray],
-        {
-          type:
-            'application/pdf'
+        const byteNumbers =
+            new Array(
+                slice.length
+            );
+
+
+        for(
+            let i=0;
+            i<slice.length;
+            i++
+        ){
+
+            byteNumbers[i]=
+                slice.charCodeAt(i);
+
         }
-      );
 
 
-    if (
-      pdfBlobURL
-    ) {
+        byteArrays.push(
+            new Uint8Array(
+                byteNumbers
+            )
+        );
 
-      URL.revokeObjectURL(
-        pdfBlobURL
-      );
     }
 
 
-    pdfBlobURL =
-      URL.createObjectURL(
-        blob
-      );
-
-
-    pdfNombre =
-      nombre;
-
-
-    document
-      .getElementById(
-        'pdfFrame'
-      )
-      .src =
-      pdfBlobURL;
-
-
-    document
-      .getElementById(
-        'modalPDF'
-      )
-      .classList
-      .add(
-        'show'
-      );
-
-  } catch (error) {
-
-    console.error(
-      error
+    return new Blob(
+        byteArrays,
+        {
+            type:tipo
+        }
     );
 
-
-    mostrarToast(
-      'No fue posible visualizar el PDF.',
-      'error'
-    );
-  }
 }
 
 
 /* =========================================================
    DESCARGAR PDF
-   ========================================================= */
+========================================================= */
 
-function descargarPDF() {
+function descargarPDF(){
 
-  if (
-    !pdfBlobURL
-  ) {
+    const iframe =
+        document.getElementById(
+            "pdfViewer"
+        );
 
-    mostrarToast(
-      'No hay un PDF disponible.',
-      'warning'
+
+    const url =
+        iframe.dataset.url;
+
+
+    if(!url){
+
+        mostrarToast(
+            "No hay PDF disponible.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    const enlace =
+        document.createElement("a");
+
+
+    enlace.href=url;
+
+    enlace.download=
+        "Peticion.pdf";
+
+
+    document.body.appendChild(
+        enlace
     );
 
-    return;
-  }
 
+    enlace.click();
 
-  const enlace =
-    document.createElement(
-      'a'
-    );
+    enlace.remove();
 
-
-  enlace.href =
-    pdfBlobURL;
-
-
-  enlace.download =
-    pdfNombre ||
-    'Reporte_Peticiones.pdf';
-
-
-  document
-    .body
-    .appendChild(
-      enlace
-    );
-
-
-  enlace.click();
-
-
-  enlace.remove();
 }
 
 
 /* =========================================================
    IMPRIMIR PDF
-   ========================================================= */
+========================================================= */
 
-function imprimirPDF() {
+function imprimirPDF(){
 
-  if (
-    !pdfBlobURL
-  ) {
-
-    mostrarToast(
-      'No hay un PDF disponible.',
-      'warning'
-    );
-
-    return;
-  }
+    const iframe =
+        document.getElementById(
+            "pdfViewer"
+        );
 
 
-  const ventana =
-    window.open(
-      pdfBlobURL,
-      '_blank'
-    );
+    if(iframe){
 
+        iframe.contentWindow.focus();
 
-  if (
-    !ventana
-  ) {
+        iframe.contentWindow.print();
 
-    mostrarToast(
-      'El navegador bloqueó la ventana emergente.',
-      'warning'
-    );
+    }
 
-    return;
-  }
-
-
-  setTimeout(
-    function() {
-
-      ventana.print();
-
-    },
-    1200
-  );
 }
 
 
 /* =========================================================
-   CERRAR PDF
-   ========================================================= */
+   MODALES
+========================================================= */
 
-function cerrarPDF() {
+function abrirModal(id){
 
-  document
-    .getElementById(
-      'modalPDF'
-    )
-    .classList
-    .remove(
-      'show'
-    );
+    const modal =
+        document.getElementById(id);
 
 
-  const frame =
-    document.getElementById(
-      'pdfFrame'
-    );
+    if(modal){
 
+        modal.classList.add("show");
 
-  if (
-    frame
-  ) {
+    }
 
-    frame.src =
-      'about:blank';
-  }
-
-
-  if (
-    pdfBlobURL
-  ) {
-
-    URL.revokeObjectURL(
-      pdfBlobURL
-    );
-
-    pdfBlobURL =
-      null;
-  }
 }
+
+
+function cerrarModal(id){
+
+    const modal =
+        document.getElementById(id);
+
+
+    if(modal){
+
+        modal.classList.remove("show");
+
+    }
+
+}
+
+
+function cerrarModalFondo(event){
+
+    if(
+        event.target.classList.contains(
+            "modal"
+        )
+    ){
+
+        event.target.classList.remove(
+            "show"
+        );
+
+    }
+
+}
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key==="Escape"){
+
+            document
+                .querySelectorAll(".modal.show")
+                .forEach(function(modal){
+
+                    modal.classList.remove(
+                        "show"
+                    );
+
+                });
+
+        }
+
+    }
+);
 
 
 /* =========================================================
    LOADING
-   ========================================================= */
+========================================================= */
 
-function mostrarLoading(
-  texto
-) {
+function mostrarLoading(texto){
 
-  const loading =
-    document.getElementById(
-      'loading'
-    );
+    const overlay =
+        document.getElementById(
+            "loadingOverlay"
+        );
 
 
-  const loadingText =
-    document.getElementById(
-      'loadingText'
-    );
+    const mensaje =
+        document.getElementById(
+            "loadingText"
+        );
 
 
-  if (
-    loadingText
-  ) {
+    if(mensaje){
 
-    loadingText.textContent =
-      texto ||
-      'Procesando...';
-  }
+        mensaje.textContent =
+            texto ||
+            "Procesando información...";
+
+    }
 
 
-  if (
-    loading
-  ) {
+    if(overlay){
 
-    loading.classList.add(
-      'show'
-    );
-  }
+        overlay.classList.add(
+            "show"
+        );
+
+    }
+
 }
 
 
-/* =========================================================
-   OCULTAR LOADING
-   ========================================================= */
+function ocultarLoading(){
 
-function ocultarLoading() {
-
-  const loading =
-    document.getElementById(
-      'loading'
-    );
+    const overlay =
+        document.getElementById(
+            "loadingOverlay"
+        );
 
 
-  if (
-    loading
-  ) {
+    if(overlay){
 
-    loading.classList.remove(
-      'show'
-    );
-  }
+        overlay.classList.remove(
+            "show"
+        );
+
+    }
+
 }
 
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
-function mostrarToast(
-  mensaje,
-  tipo
-) {
+function mostrarToast(mensaje,tipo="info"){
 
-  const toast =
-    document.getElementById(
-      'toast'
-    );
-
-
-  if (
-    !toast
-  ) {
-
-    return;
-  }
-
-
-  toast.textContent =
-    mensaje || '';
-
-
-  toast.className =
-    'toast show ' +
-    (
-      tipo ||
-      ''
-    );
-
-
-  clearTimeout(
-    window.__toastTimer
-  );
-
-
-  window.__toastTimer =
-    setTimeout(
-      function() {
-
-        toast.classList.remove(
-          'show'
+    const container =
+        document.getElementById(
+            "toastContainer"
         );
 
-      },
-      4500
+
+    if(!container){
+        return;
+    }
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        "toast " + tipo;
+
+
+    let icono="i";
+
+
+    if(tipo==="success"){
+        icono="✓";
+    }
+
+    else if(tipo==="error"){
+        icono="!";
+    }
+
+    else if(tipo==="warning"){
+        icono="!";
+    }
+
+
+    toast.innerHTML=`
+
+        <div class="toast-icon">
+            ${icono}
+        </div>
+
+        <div class="toast-message">
+            ${escapeHTML(mensaje)}
+        </div>
+
+    `;
+
+
+    container.appendChild(
+        toast
     );
+
+
+    setTimeout(function(){
+
+        toast.style.opacity="0";
+
+        toast.style.transform=
+            "translateX(20px)";
+
+
+        setTimeout(
+            ()=>toast.remove(),
+            250
+        );
+
+    },4500);
+
 }
 
 
 /* =========================================================
-   CERRAR MODALES AL HACER CLICK AFUERA
-   ========================================================= */
+   ERROR
+========================================================= */
 
-window.addEventListener(
-  'click',
-  function(event) {
+function obtenerMensajeError(error){
 
-    const modalDetalle =
-      document.getElementById(
-        'modalDetalle'
-      );
-
-
-    const modalPDF =
-      document.getElementById(
-        'modalPDF'
-      );
-
-
-    if (
-      event.target ===
-      modalDetalle
-    ) {
-
-      cerrarModalDetalle();
+    if(!error){
+        return "Ocurrió un error inesperado.";
     }
 
 
-    if (
-      event.target ===
-      modalPDF
-    ) {
-
-      cerrarPDF();
+    if(typeof error==="string"){
+        return error;
     }
 
-  }
-);
+
+    return (
+        error.message ||
+        error.error ||
+        "Ocurrió un error inesperado."
+    );
+
+}
 
 
 /* =========================================================
-   ESC
-   ========================================================= */
+   ESCAPE HTML
+========================================================= */
 
-document.addEventListener(
-  'keydown',
-  function(event) {
+function escapeHTML(valor){
 
-    if (
-      event.key ===
-      'Escape'
-    ) {
+    return String(valor ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 
-      cerrarModalDetalle();
-
-      cerrarPDF();
-    }
-
-  }
-);
+}
 
 </script>
 
 </body>
 </html>
-```
