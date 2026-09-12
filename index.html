@@ -74,6 +74,8 @@ main{padding:28px 0 45px}
 .form-grid.two{grid-template-columns:repeat(2,1fr)}
 .form-grid.three{grid-template-columns:repeat(3,1fr)}
 .form-grid.four{grid-template-columns:repeat(4,1fr)}
+/* Layout específico para Datos del Peticionario: Peticionario más ancho, Correo más compacto */
+.form-grid.grid-peticionario{grid-template-columns:2.5fr 1fr 1fr 0.7fr}
 .field{min-width:0}
 .field.full{grid-column:1/-1}
 .field.span-2{grid-column:span 2}
@@ -192,8 +194,8 @@ tbody tr:last-child td{border-bottom:0}
 @keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes toastIn{from{opacity:0;transform:translateX(25px)}to{opacity:1;transform:none}}
 @media(max-width:1200px){.dashboard{grid-template-columns:repeat(3,1fr)}.form-grid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:900px){.topbar-inner{align-items:flex-start}.system-status{display:none}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four{grid-template-columns:repeat(2,1fr)}.field.span-2,.field.span-3{grid-column:span 2}}
-@media(max-width:650px){.container{width:94%}main{padding-top:17px}.topbar-inner{min-height:auto}.brand-icon{width:50px;height:50px;border-radius:13px}.brand-icon svg{width:28px;height:28px}.brand-text h1{font-size:17px}.brand-text p{font-size:10px}.dashboard{grid-template-columns:repeat(2,1fr);gap:10px}.kpi{padding:15px}.kpi-number{font-size:25px}.kpi-icon{width:37px;height:37px}.tabs{width:100%}.tab{flex:1;padding:11px 10px;font-size:12px}.card-header{padding:17px}.form-body{padding:17px}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four{grid-template-columns:1fr}.field.span-2,.field.span-3,.field.full{grid-column:1}.form-actions{flex-direction:column-reverse}.form-actions .btn{width:100%}.detail-grid{grid-template-columns:1fr}.detail-item.full{grid-column:1}.toast-container{left:12px;right:12px;bottom:12px}.toast{min-width:0;width:100%}}
+@media(max-width:900px){.topbar-inner{align-items:flex-start}.system-status{display:none}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four,.form-grid.grid-peticionario{grid-template-columns:repeat(2,1fr)}.field.span-2,.field.span-3{grid-column:span 2}}
+@media(max-width:650px){.container{width:94%}main{padding-top:17px}.topbar-inner{min-height:auto}.brand-icon{width:50px;height:50px;border-radius:13px}.brand-icon svg{width:28px;height:28px}.brand-text h1{font-size:17px}.brand-text p{font-size:10px}.dashboard{grid-template-columns:repeat(2,1fr);gap:10px}.kpi{padding:15px}.kpi-number{font-size:25px}.kpi-icon{width:37px;height:37px}.tabs{width:100%}.tab{flex:1;padding:11px 10px;font-size:12px}.card-header{padding:17px}.form-body{padding:17px}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four,.form-grid.grid-peticionario{grid-template-columns:1fr}.field.span-2,.field.span-3,.field.full{grid-column:1}.form-actions{flex-direction:column-reverse}.form-actions .btn{width:100%}.detail-grid{grid-template-columns:1fr}.detail-item.full{grid-column:1}.toast-container{left:12px;right:12px;bottom:12px}.toast{min-width:0;width:100%}}
 @media(max-width:420px){.dashboard{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}}
 @media(max-width:900px){
   .filtros-toggle{display:flex;align-items:center;gap:8px;width:100%;justify-content:space-between;padding:14px 20px;background:#fbfcfe;border:0;border-bottom:1px solid var(--gris-borde);color:var(--gris-oscuro);font-weight:800;font-size:13px;cursor:pointer}
@@ -283,7 +285,7 @@ tbody tr:last-child td{border-bottom:0}
             </div>
             <div class="form-section">
                 <div class="form-section-title"><span class="number">2</span><h3>Datos del peticionario</h3></div>
-                <div class="form-grid">
+                <div class="form-grid grid-peticionario">
                     <div class="field span-2"><label class="required">Peticionario</label><input type="text" id="peticionario" required autocomplete="off"></div>
                     <div class="field"><label>Documento / Identificación</label><input type="text" id="documento" autocomplete="off"></div>
                     <div class="field"><label>Teléfono</label><input type="tel" id="telefono" autocomplete="off"></div>
