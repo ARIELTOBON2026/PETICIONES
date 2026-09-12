@@ -860,19 +860,12 @@ input[readonly]{
     color:var(--azul);
 }
 
+/* ✅ CORREGIDO: Grid responsivo con auto-fit */
 .filters{
     display:grid;
 
     grid-template-columns:
-        1.1fr
-        1.1fr
-        1.2fr
-        1fr
-        1fr
-        1fr
-        1fr
-        120px
-        120px;
+        repeat(auto-fit, minmax(140px, 1fr));
 
     gap:10px;
 }
@@ -1573,11 +1566,6 @@ tbody tr:last-child td{
             repeat(4,1fr);
     }
 
-    .filters{
-        grid-template-columns:
-            repeat(4,1fr);
-    }
-
 }
 
 @media(max-width:900px){
@@ -1601,11 +1589,6 @@ tbody tr:last-child td{
     .field.span-2,
     .field.span-3{
         grid-column:span 2;
-    }
-
-    .filters{
-        grid-template-columns:
-            repeat(3,1fr);
     }
 
 }
@@ -1702,11 +1685,6 @@ tbody tr:last-child td{
 
     .form-actions .btn{
         width:100%;
-    }
-
-    .filters{
-        grid-template-columns:
-            1fr 1fr;
     }
 
     .filter-actions{
@@ -2196,7 +2174,8 @@ tbody tr:last-child td{
             <input
                 type="date"
                 id="fechaRecepcion"
-                required>
+                required
+                onchange="calcularFechaLimite()">
 
         </div>
 
@@ -2950,7 +2929,7 @@ tbody tr:last-child td{
 
         <br>
 
-        Sistema de Gestión de Peticiones · V1.1
+        Sistema de Gestión de Peticiones · V2.0
 
     </div>
 
@@ -3155,3114 +3134,1215 @@ tbody tr:last-child td{
 <script>
 
 /* =========================================================
-   CONFIGURACIÓN
+   CONFIGURACIÓN CENTRALIZADA
 ========================================================= */
 
-const URL_API =
-"https://script.google.com/macros/s/AKfycbzXWMais8_FupmR2UFVVeQa3cUsha2mP5C4AyPfKioudevDXOij_3jyiwUs1uIU7ZY/exec";
+const CONFIG = {
+    // ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Web App implementada
+    API_URL: "https://script.google.com/macros/s/AKfycbzXS89AUtiWIxx04TS2sgPQ_RrRKWMRrWKVhrDOH-kv_vfeq1CMsN5_cfQzWnbdPzU/exec",
+    DIAS_ALERTA: 3,
+    TERMINO_POR_DEFECTO: 15,
+    DEBOUNCE_MS: 400
+};
 
+/* =========================================================
+   ESTADO GLOBAL
+========================================================= */
 
 let registros = [];
 let registrosFiltrados = [];
 
 let registroEditando = null;
 let detalleActual = null;
+let estaCargando = false;
 
 const ES_APPS_SCRIPT =
     typeof google !== "undefined" &&
     google.script &&
     google.script.run;
 
-
 /* =========================================================
    INICIO
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded",function(){
-
+document.addEventListener("DOMContentLoaded", function() {
     inicializar();
-
 });
 
-
-function inicializar(){
-
+function inicializar() {
     cargarDatosIniciales();
-
     cargarSiguienteConsecutivo();
-
     establecerFechaHoy();
-
     configurarFiltros();
-
 }
-
 
 /* =========================================================
    TABS
 ========================================================= */
 
-function mostrarTab(tab,boton){
+function mostrarTab(tab, boton) {
+    document.querySelectorAll(".tab-content").forEach(el => {
+        el.classList.remove("active");
+    });
 
-    document
-        .querySelectorAll(".tab-content")
-        .forEach(el=>{
-            el.classList.remove("active");
-        });
+    document.querySelectorAll(".tab").forEach(el => {
+        el.classList.remove("active");
+    });
 
-    document
-        .querySelectorAll(".tab")
-        .forEach(el=>{
-            el.classList.remove("active");
-        });
-
-
-    if(tab==="registro"){
-
-        document
-            .getElementById("tabRegistro")
-            .classList.add("active");
-
+    if (tab === "registro") {
+        document.getElementById("tabRegistro").classList.add("active");
     }
 
-    if(tab==="seguimiento"){
-
-        document
-            .getElementById("tabSeguimiento")
-            .classList.add("active");
-
+    if (tab === "seguimiento") {
+        document.getElementById("tabSeguimiento").classList.add("active");
         cargarRegistros();
-
     }
 
-
-    if(boton){
+    if (boton) {
         boton.classList.add("active");
     }
-
 }
-
 
 /* =========================================================
    FECHA ACTUAL
 ========================================================= */
 
-function establecerFechaHoy(){
-
-    const input =
-        document.getElementById("fechaRecepcion");
-
-    if(!input.value){
-
-        const hoy =
-            new Date();
-
-        const fecha =
-            hoy.getFullYear() +
-            "-" +
-            String(hoy.getMonth()+1).padStart(2,"0") +
-            "-" +
-            String(hoy.getDate()).padStart(2,"0");
-
-        input.value=fecha;
-
+function establecerFechaHoy() {
+    const input = document.getElementById("fechaRecepcion");
+    if (!input.value) {
+        const hoy = new Date();
+        const fecha = hoy.getFullYear() + "-" +
+            String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
+            String(hoy.getDate()).padStart(2, "0");
+        input.value = fecha;
     }
-
 }
 
-
 /* =========================================================
-   CARGAR DATOS INICIALES
+   CARGAR DATOS INICIALES (CON MANEJO ROBUSTO DE ERRORES)
 ========================================================= */
 
-function cargarDatosIniciales(){
+function cargarDatosIniciales() {
+    mostrarLoading("Cargando información inicial...");
 
-    mostrarLoading("Cargando información...");
-
-
-    if(ES_APPS_SCRIPT){
-
+    if (ES_APPS_SCRIPT) {
         google.script.run
-
-            .withSuccessHandler(function(data){
-
+            .withSuccessHandler(function(data) {
+                ocultarLoading();
                 procesarDatosIniciales(data);
-
-                ocultarLoading();
-
             })
-
-            .withFailureHandler(function(error){
-
+            .withFailureHandler(function(error) {
                 ocultarLoading();
-
-                mostrarToast(
-                    "No se pudieron cargar los menús.",
-                    "error"
-                );
-
+                console.error("Error google.script.run:", error);
+                mostrarToast("Error al cargar menús: " + (error.message || error), "error");
             })
-
             .obtenerDatosIniciales();
-
         return;
     }
 
+    const callback = "callbackInicial_" + Date.now();
 
-    const callback =
-        "callbackInicial_" +
-        Date.now();
-
-
-    window[callback]=function(data){
-
-        procesarDatosIniciales(data);
-
-        ocultarLoading();
-
-        delete window[callback];
-
+    window[callback] = function(data) {
+        try {
+            ocultarLoading();
+            if (data && data.ok === false) {
+                console.error("Error del servidor (datos iniciales):", data.mensaje || data.message);
+                mostrarToast(data.mensaje || data.message || "Error al cargar datos iniciales", "error");
+            } else {
+                procesarDatosIniciales(data);
+            }
+        } catch (err) {
+            console.error("Error procesando datos iniciales:", err);
+            mostrarToast("Error procesando respuesta del servidor", "error");
+        } finally {
+            delete window[callback];
+            const script = document.getElementById("script_" + callback);
+            if (script) script.remove();
+        }
     };
 
+    const script = document.createElement("script");
+    script.id = "script_" + callback;
+    script.src = CONFIG.API_URL + "?accion=obtenerDatosIniciales&callback=" + callback;
 
-    const script =
-        document.createElement("script");
-
-    script.src =
-        URL_API +
-        "?accion=obtenerDatosIniciales" +
-        "&callback=" +
-        callback;
-
-    script.onerror=function(){
-
+    script.onerror = function() {
         ocultarLoading();
-
-        mostrarToast(
-            "No se pudo conectar con el servidor.",
-            "error"
-        );
-
+        console.error("Fallo de red en JSONP (obtenerDatosIniciales). Verifica URL_API y permisos.");
+        mostrarToast("No se pudo conectar con el servidor. Verifica la URL y permisos de la Web App.", "error");
+        delete window[callback];
+        script.remove();
     };
 
     document.body.appendChild(script);
-
 }
 
-
-function procesarDatosIniciales(data){
-
-    if(!data){
+function procesarDatosIniciales(data) {
+    if (!data) {
+        console.warn("No se recibieron datos iniciales");
         return;
     }
 
+    const funcionarios = data.funcionarios || [];
+    const tipos = data.tipos || [];
 
-    const funcionarios =
-        data.funcionarios ||
-        data.FUNCIONARIOS ||
-        [];
+    llenarSelect("funcionario", funcionarios, "Seleccione funcionario...");
+    llenarSelect("filtroFuncionario", funcionarios, "Todos");
 
-    const tipos =
-        data.tipos ||
-        data.TIPOS ||
-        data.tipoPeticion ||
-        [];
+    llenarSelect("tipoPeticion", tipos, "Seleccione...");
+    llenarSelect("filtroTipo", tipos, "Todos");
 
+    if (data.registros) {
+        registros = Array.isArray(data.registros) ? data.registros : [];
+        aplicarFiltros();
+    }
 
-    llenarSelect(
-        "funcionario",
-        funcionarios,
-        "Seleccione funcionario..."
-    );
-
-
-    llenarSelect(
-        "filtroFuncionario",
-        funcionarios,
-        "Todos"
-    );
-
-
-    llenarSelect(
-        "tipoPeticion",
-        tipos,
-        "Seleccione..."
-    );
-
-
-    llenarSelect(
-        "filtroTipo",
-        tipos,
-        "Todos"
-    );
-
+    if (data.dashboard) {
+        actualizarDashboardConDatos(data.dashboard);
+    }
 }
 
+function actualizarDashboardConDatos(dashData) {
+    animarNumero("kpiTotal", dashData.total || 0);
+    animarNumero("kpiPendientes", dashData.pendientes || 0);
+    animarNumero("kpiTramite", dashData.enTramite || 0);
+    animarNumero("kpiRespondidas", dashData.respondidas || 0);
+    animarNumero("kpiVencidas", dashData.vencidas || 0);
+}
 
 /* =========================================================
    LLENAR SELECT
 ========================================================= */
 
-function llenarSelect(id,datos,placeholder){
+function llenarSelect(id, datos, placeholder) {
+    const select = document.getElementById(id);
+    if (!select) return;
 
-    const select =
-        document.getElementById(id);
+    select.innerHTML = "";
 
-    if(!select){
-        return;
-    }
-
-
-    select.innerHTML="";
-
-
-    const primera =
-        document.createElement("option");
-
-    primera.value="";
-
-    primera.textContent=placeholder;
-
+    const primera = document.createElement("option");
+    primera.value = "";
+    primera.textContent = placeholder;
     select.appendChild(primera);
 
+    if (!Array.isArray(datos)) return;
 
-    if(!Array.isArray(datos)){
-        return;
-    }
+    datos.forEach(item => {
+        const option = document.createElement("option");
 
-
-    datos.forEach(item=>{
-
-        const option =
-            document.createElement("option");
-
-
-        if(typeof item==="object"){
-
-            option.value =
-                item.valor ||
-                item.value ||
-                item.nombre ||
-                item.NOMBRE ||
-                "";
-
-            option.textContent =
-                item.nombre ||
-                item.NOMBRE ||
-                item.texto ||
-                item.label ||
-                item.valor ||
-                item.value ||
-                "";
-
-        }else{
-
-            option.value=item;
-
-            option.textContent=item;
-
+        if (typeof item === "object") {
+            option.value = item.valor || item.value || item.nombre || item.NOMBRE || "";
+            option.textContent = item.nombre || item.NOMBRE || item.texto || item.label || item.valor || item.value || "";
+        } else {
+            option.value = item;
+            option.textContent = item;
         }
 
-
-        if(option.value){
-
+        if (option.value) {
             select.appendChild(option);
-
         }
-
     });
-
 }
-
 
 /* =========================================================
    CONSECUTIVO
 ========================================================= */
 
-function cargarSiguienteConsecutivo(){
-
-    if(ES_APPS_SCRIPT){
-
+function cargarSiguienteConsecutivo() {
+    if (ES_APPS_SCRIPT) {
         google.script.run
-
-            .withSuccessHandler(function(numero){
-
-                document
-                    .getElementById("consecutivo")
-                    .value =
-                    numero || "";
-
+            .withSuccessHandler(function(numero) {
+                document.getElementById("consecutivo").value = numero || "";
             })
-
-            .withFailureHandler(function(){
-
-                console.log(
-                    "No fue posible cargar consecutivo"
-                );
-
+            .withFailureHandler(function() {
+                console.log("No fue posible cargar consecutivo");
             })
-
             .obtenerSiguienteConsecutivo();
-
         return;
     }
 
+    const callback = "callbackConsecutivo_" + Date.now();
 
-    const callback =
-        "callbackConsecutivo_" +
-        Date.now();
-
-
-    window[callback]=function(data){
-
-        const numero =
-            typeof data==="object"
-                ? (
-                    data.consecutivo ||
-                    data.numero ||
-                    ""
-                )
+    window[callback] = function(data) {
+        try {
+            const numero = typeof data === "object"
+                ? (data.consecutivo || data.numero || "")
                 : data;
-
-
-        document
-            .getElementById("consecutivo")
-            .value =
-            numero || "";
-
-
-        delete window[callback];
-
+            document.getElementById("consecutivo").value = numero || "";
+        } finally {
+            delete window[callback];
+            const script = document.getElementById("script_" + callback);
+            if (script) script.remove();
+        }
     };
 
+    const script = document.createElement("script");
+    script.id = "script_" + callback;
+    script.src = CONFIG.API_URL + "?accion=obtenerSiguienteConsecutivo&callback=" + callback;
 
-    const script =
-        document.createElement("script");
-
-
-    script.src =
-        URL_API +
-        "?accion=obtenerSiguienteConsecutivo" +
-        "&callback=" +
-        callback;
-
+    script.onerror = function() {
+        console.error("Fallo al cargar consecutivo");
+        delete window[callback];
+        script.remove();
+    };
 
     document.body.appendChild(script);
-
 }
-
 
 /* =========================================================
    FECHA LÍMITE
 ========================================================= */
 
-function calcularFechaLimite(){
+function calcularFechaLimite() {
+    const fecha = document.getElementById("fechaRecepcion").value;
+    const termino = parseInt(document.getElementById("termino").value);
 
-    const fecha =
-        document.getElementById(
-            "fechaRecepcion"
-        ).value;
-
-    const termino =
-        parseInt(
-            document.getElementById(
-                "termino"
-            ).value
-        );
-
-
-    if(!fecha || !termino){
-
-        document
-            .getElementById("fechaLimite")
-            .value="";
-
+    if (!fecha || !termino) {
+        document.getElementById("fechaLimite").value = "";
         return;
     }
 
+    const f = new Date(fecha + "T00:00:00");
+    f.setDate(f.getDate() + termino);
 
-    const f =
-        new Date(fecha + "T00:00:00");
+    const resultado = f.getFullYear() + "-" +
+        String(f.getMonth() + 1).padStart(2, "0") + "-" +
+        String(f.getDate()).padStart(2, "0");
 
-
-    f.setDate(
-        f.getDate()+termino
-    );
-
-
-    const resultado =
-        f.getFullYear() +
-        "-" +
-        String(f.getMonth()+1).padStart(2,"0") +
-        "-" +
-        String(f.getDate()).padStart(2,"0");
-
-
-    document
-        .getElementById("fechaLimite")
-        .value=resultado;
-
+    document.getElementById("fechaLimite").value = resultado;
 }
 
-
 /* =========================================================
-   GUARDAR
+   GUARDAR (CORREGIDO: sin no-cors, manejo de respuesta JSON)
 ========================================================= */
 
-function guardar(event){
-
+function guardar(event) {
     event.preventDefault();
-
-
     calcularFechaLimite();
 
-
-    const formulario =
-        document.getElementById(
-            "formPeticion"
-        );
-
-
-    if(!formulario.checkValidity()){
-
+    const formulario = document.getElementById("formPeticion");
+    if (!formulario.checkValidity()) {
         formulario.reportValidity();
-
         return;
-
     }
 
+    // ✅ Validación de fechas lógicas
+    const fechaRecepcion = document.getElementById("fechaRecepcion").value;
+    const fechaRespuesta = document.getElementById("fechaRespuesta").value;
+    if (fechaRespuesta && fechaRespuesta < fechaRecepcion) {
+        mostrarToast("La fecha de respuesta no puede ser anterior a la de recepción.", "error");
+        return;
+    }
 
-    const datos =
-        obtenerDatosFormulario();
-
+    const datos = obtenerDatosFormulario();
 
     activarBotonGuardar(false);
+    mostrarLoading(registroEditando ? "Actualizando petición..." : "Guardando petición...");
 
-    mostrarLoading(
-        registroEditando
-            ? "Actualizando petición..."
-            : "Guardando petición..."
-    );
-
-
-    if(ES_APPS_SCRIPT){
-
-        const metodo =
-            registroEditando
-                ? "actualizarPeticion"
-                : "guardarPeticion";
-
+    if (ES_APPS_SCRIPT) {
+        const metodo = registroEditando ? "actualizarPeticion" : "guardarPeticion";
 
         google.script.run
-
-            .withSuccessHandler(function(respuesta){
-
+            .withSuccessHandler(function(respuesta) {
                 ocultarLoading();
-
                 activarBotonGuardar(true);
 
-
-                if(
-                    respuesta &&
-                    respuesta.exito===false
-                ){
-
-                    mostrarToast(
-                        respuesta.mensaje ||
-                        "No fue posible guardar.",
-                        "error"
-                    );
-
+                if (respuesta && respuesta.ok === false) {
+                    mostrarToast(respuesta.mensaje || respuesta.message || "No fue posible guardar.", "error");
                     return;
-
                 }
 
-
                 mostrarToast(
-                    registroEditando
-                        ? "Petición actualizada correctamente."
-                        : "Petición guardada correctamente.",
+                    registroEditando ? "Petición actualizada correctamente." : "Petición guardada correctamente.",
                     "success"
                 );
 
-
                 nuevoRegistro();
-
                 cargarRegistros();
-
             })
-
-            .withFailureHandler(function(error){
-
+            .withFailureHandler(function(error) {
                 ocultarLoading();
-
                 activarBotonGuardar(true);
-
-                mostrarToast(
-                    obtenerMensajeError(error),
-                    "error"
-                );
-
+                mostrarToast(obtenerMensajeError(error), "error");
             })[metodo](datos);
-
         return;
     }
 
-
-    fetch(
-        URL_API,
-        {
-            method:"POST",
-
-            mode:"no-cors",
-
-            headers:{
-                "Content-Type":
-                    "text/plain;charset=utf-8"
-            },
-
-            body:JSON.stringify({
-
-                accion:
-                    registroEditando
-                        ? "actualizarPeticion"
-                        : "guardarPeticion",
-
-                datos:datos
-
-            })
+    // ✅ CORREGIDO: fetch sin no-cors, manejo correcto de respuesta JSON
+    fetch(CONFIG.API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify({
+            accion: registroEditando ? "actualizarPeticion" : "guardarPeticion",
+            ...datos
+        })
+    })
+    .then(async function(response) {
+        const texto = await response.text();
+        let resultado;
+        try {
+            resultado = JSON.parse(texto);
+        } catch (e) {
+            throw new Error("Respuesta inválida del servidor: " + texto.substring(0, 200));
         }
-    )
-    .then(function(){
+
+        if (resultado.ok === false) {
+            throw new Error(resultado.mensaje || resultado.message || "Error al guardar");
+        }
 
         ocultarLoading();
-
         activarBotonGuardar(true);
 
-
         mostrarToast(
-            registroEditando
-                ? "Petición actualizada correctamente."
-                : "Petición guardada correctamente.",
+            registroEditando ? "Petición actualizada correctamente." : "Petición guardada correctamente.",
             "success"
         );
 
-
         nuevoRegistro();
-
-
-        setTimeout(
-            cargarRegistros,
-            700
-        );
-
+        setTimeout(cargarRegistros, 700);
     })
-    .catch(function(error){
-
+    .catch(function(error) {
         ocultarLoading();
-
         activarBotonGuardar(true);
-
-        mostrarToast(
-            obtenerMensajeError(error),
-            "error"
-        );
-
+        console.error("Error en fetch guardar:", error);
+        mostrarToast(obtenerMensajeError(error), "error");
     });
-
 }
-
 
 /* =========================================================
    OBTENER DATOS FORMULARIO
 ========================================================= */
 
-function obtenerDatosFormulario(){
-
+function obtenerDatosFormulario() {
     return {
-
-        consecutivo:
-            valor("consecutivo"),
-
-        radicado:
-            valor("radicado"),
-
-        fechaRecepcion:
-            valor("fechaRecepcion"),
-
-        peticionario:
-            valor("peticionario"),
-
-        documento:
-            valor("documento"),
-
-        telefono:
-            valor("telefono"),
-
-        correo:
-            valor("correo"),
-
-        tipoPeticion:
-            valor("tipoPeticion"),
-
-        funcionario:
-            valor("funcionario"),
-
-        asunto:
-            valor("asunto"),
-
-        termino:
-            valor("termino"),
-
-        fechaLimite:
-            valor("fechaLimite"),
-
-        estado:
-            valor("estado"),
-
-        fechaRespuesta:
-            valor("fechaRespuesta"),
-
-        medioRespuesta:
-            valor("medioRespuesta"),
-
-        observaciones:
-            valor("observaciones")
-
+        consecutivo: valor("consecutivo"),
+        radicado: valor("radicado"),
+        fechaRecepcion: valor("fechaRecepcion"),
+        peticionario: valor("peticionario"),
+        documento: valor("documento"),
+        telefono: valor("telefono"),
+        correo: valor("correo"),
+        tipoPeticion: valor("tipoPeticion"),
+        funcionario: valor("funcionario"),
+        asunto: valor("asunto"),
+        termino: valor("termino"),
+        fechaLimite: valor("fechaLimite"),
+        estado: valor("estado"),
+        fechaRespuesta: valor("fechaRespuesta"),
+        medioRespuesta: valor("medioRespuesta"),
+        observaciones: valor("observaciones"),
+        fila: registroEditando ? registroEditando.fila : null
     };
-
 }
 
-
-function valor(id){
-
-    const el =
-        document.getElementById(id);
-
-    return el
-        ? el.value.trim()
-        : "";
-
+function valor(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
 }
-
 
 /* =========================================================
    NUEVO REGISTRO
 ========================================================= */
 
-function nuevoRegistro(){
-
-    const form =
-        document.getElementById(
-            "formPeticion"
-        );
-
-
+function nuevoRegistro() {
+    const form = document.getElementById("formPeticion");
     form.reset();
 
+    registroEditando = null;
 
-    registroEditando=null;
-
-
-    document
-        .getElementById("estado")
-        .value="PENDIENTE";
-
-
-    document
-        .getElementById("termino")
-        .value="15";
-
+    document.getElementById("estado").value = "PENDIENTE";
+    document.getElementById("termino").value = CONFIG.TERMINO_POR_DEFECTO;
 
     establecerFechaHoy();
-
     calcularFechaLimite();
-
-
     cargarSiguienteConsecutivo();
 
-
-    document
-        .getElementById("radicado")
-        .focus();
-
+    document.getElementById("radicado").focus();
 }
-
 
 /* =========================================================
    ACTIVAR BOTÓN
 ========================================================= */
 
-function activarBotonGuardar(activo){
+function activarBotonGuardar(activo) {
+    const btn = document.getElementById("btnGuardar");
+    if (!btn) return;
 
-    const btn =
-        document.getElementById(
-            "btnGuardar"
-        );
+    btn.disabled = !activo;
 
-
-    if(!btn){
-        return;
-    }
-
-
-    btn.disabled=!activo;
-
-
-    if(activo){
-
-        btn.innerHTML=`
-
-            <svg viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="2">
-
+    if (activo) {
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-
                 <path d="M17 21v-8H7v8"/>
-
                 <path d="M7 3v5h8"/>
-
             </svg>
-
             Guardar petición
         `;
-
-    }else{
-
-        btn.innerHTML=`
-
-            <svg viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="2">
-
+    } else {
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2v4"/>
-
                 <path d="M12 18v4"/>
-
                 <path d="M4.93 4.93l2.83 2.83"/>
-
                 <path d="M16.24 16.24l2.83 2.83"/>
-
                 <path d="M2 12h4"/>
-
                 <path d="M18 12h4"/>
-
             </svg>
-
             Procesando...
         `;
-
     }
-
 }
 
-
 /* =========================================================
-   CARGAR REGISTROS
+   CARGAR REGISTROS (CORREGIDO: manejo robusto de errores)
 ========================================================= */
 
-function cargarRegistros(){
+function cargarRegistros() {
+    if (estaCargando) return;
+    estaCargando = true;
 
-    if(ES_APPS_SCRIPT){
+    mostrarLoading("Consultando registros...");
 
+    if (ES_APPS_SCRIPT) {
         google.script.run
-
-            .withSuccessHandler(function(data){
-
-                registros =
-                    Array.isArray(data)
-                        ? data
-                        : (
-                            data.registros ||
-                            data.data ||
-                            []
-                        );
-
-
+            .withSuccessHandler(function(data) {
+                estaCargando = false;
+                ocultarLoading();
+                registros = Array.isArray(data) ? data : (data.registros || data.data || []);
                 aplicarFiltros();
-
                 actualizarDashboard();
-
             })
-
-            .withFailureHandler(function(error){
-
-                mostrarToast(
-                    "No se pudieron cargar los registros.",
-                    "error"
-                );
-
+            .withFailureHandler(function(error) {
+                estaCargando = false;
+                ocultarLoading();
+                console.error("Error al listar registros:", error);
+                mostrarToast("Error al cargar la tabla: " + (error.message || error), "error");
             })
-
             .listarRegistros();
-
         return;
     }
 
+    const callback = "callbackRegistros_" + Date.now();
 
-    const callback =
-        "callbackRegistros_" +
-        Date.now();
+    window[callback] = function(data) {
+        try {
+            estaCargando = false;
+            ocultarLoading();
 
+            if (data && data.ok === false) {
+                console.error("El servidor reportó un error:", data.mensaje || data.message);
+                mostrarToast(data.mensaje || data.message || "Error al cargar datos", "error");
+                registros = [];
+            } else {
+                registros = Array.isArray(data) ? data : (data.registros || data.data || []);
+                console.log("Registros cargados:", registros.length);
+            }
 
-    window[callback]=function(data){
+            aplicarFiltros();
+            actualizarDashboard();
+        } catch (err) {
+            console.error("Error procesando registros:", err);
+            mostrarToast("Error procesando respuesta del servidor", "error");
+        } finally {
+            delete window[callback];
+            const script = document.getElementById("script_" + callback);
+            if (script) script.remove();
+        }
+    };
 
-        registros =
-            Array.isArray(data)
-                ? data
-                : (
-                    data.registros ||
-                    data.data ||
-                    []
-                );
+    const script = document.createElement("script");
+    script.id = "script_" + callback;
+    script.src = CONFIG.API_URL + "?accion=listarRegistros&callback=" + callback;
 
-
-        aplicarFiltros();
-
-        actualizarDashboard();
-
-
+    script.onerror = function() {
+        estaCargando = false;
+        ocultarLoading();
+        console.error("Fallo de red en JSONP (listarRegistros). Verifica URL_API y permisos de la Web App.");
+        mostrarToast("Error de conexión. Verifica que la Web App tenga acceso 'Cualquier persona'.", "error");
         delete window[callback];
-
+        script.remove();
     };
-
-
-    const script =
-        document.createElement("script");
-
-
-    script.src =
-        URL_API +
-        "?accion=listarRegistros" +
-        "&callback=" +
-        callback;
-
-
-    script.onerror=function(){
-
-        mostrarToast(
-            "No se pudieron cargar los registros.",
-            "error"
-        );
-
-    };
-
 
     document.body.appendChild(script);
-
 }
 
-
 /* =========================================================
-   FILTROS
+   FILTROS (CON DEBOUNCE)
 ========================================================= */
 
-function configurarFiltros(){
+let debounceTimer = null;
 
-    const ids=[
-
-        "filtroRadicado",
-        "filtroDocumento",
-        "filtroPeticionario",
+function configurarFiltros() {
+    const idsSelect = [
         "filtroFuncionario",
         "filtroTipo",
         "filtroEstado",
         "filtroSemaforo",
         "filtroDesde",
         "filtroHasta"
-
     ];
 
+    const idsTexto = [
+        "filtroRadicado",
+        "filtroDocumento",
+        "filtroPeticionario"
+    ];
 
-    ids.forEach(id=>{
-
-        const el =
-            document.getElementById(id);
-
-
-        if(!el){
-            return;
-        }
-
-
-        el.addEventListener(
-            "input",
-            aplicarFiltros
-        );
-
-
-        el.addEventListener(
-            "change",
-            aplicarFiltros
-        );
-
+    idsSelect.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("change", aplicarFiltros);
     });
 
+    // ✅ DEBOUNCE en inputs de texto
+    idsTexto.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(aplicarFiltros, CONFIG.DEBOUNCE_MS);
+        });
+    });
 }
 
+function aplicarFiltros() {
+    if (estaCargando) return;
 
-function aplicarFiltros(){
+    const radicado = valor("filtroRadicado").toLowerCase();
+    const documento = valor("filtroDocumento").toLowerCase();
+    const peticionario = valor("filtroPeticionario").toLowerCase();
+    const funcionario = valor("filtroFuncionario").toLowerCase();
+    const tipo = valor("filtroTipo").toLowerCase();
+    const estado = valor("filtroEstado").toLowerCase();
+    const semaforo = valor("filtroSemaforo").toLowerCase();
+    const desde = valor("filtroDesde");
+    const hasta = valor("filtroHasta");
 
-    const radicado =
-        valor("filtroRadicado")
-        .toLowerCase();
+    registrosFiltrados = registros.filter(function(r) {
+        const rRadicado = textoRegistro(r, ["radicado", "RADICADO", "ID / Radicado"]).toLowerCase();
+        const rDocumento = textoRegistro(r, ["documento", "DOCUMENTO", "Documento / Identificación", "identificacion"]).toLowerCase();
+        const rPeticionario = textoRegistro(r, ["peticionario", "PETICIONARIO", "Peticionario", "nombre"]).toLowerCase();
+        const rFuncionario = textoRegistro(r, ["funcionario", "FUNCIONARIO", "Funcionario responsable"]).toLowerCase();
+        const rTipo = textoRegistro(r, ["tipoPeticion", "TIPO_PETICION", "Tipo de petición", "tipo"]).toLowerCase();
+        const rEstado = textoRegistro(r, ["estado", "ESTADO", "Estado"]).toLowerCase();
+        const rSemaforo = obtenerSemaforo(r).toLowerCase();
+        const fecha = normalizarFecha(textoRegistro(r, ["fechaRecepcion", "FECHA_RECEPCION", "Fecha recepción", "fecha"]));
 
-    const documento =
-        valor("filtroDocumento")
-        .toLowerCase();
+        if (radicado && !rRadicado.includes(radicado)) return false;
+        if (documento && !rDocumento.includes(documento)) return false;
+        if (peticionario && !rPeticionario.includes(peticionario)) return false;
+        if (funcionario && !rFuncionario.includes(funcionario)) return false;
+        if (tipo && !rTipo.includes(tipo)) return false;
+        if (estado && rEstado !== estado) return false;
+        if (semaforo && rSemaforo !== semaforo) return false;
 
-    const peticionario =
-        valor("filtroPeticionario")
-        .toLowerCase();
+        if (desde && fecha && fecha < desde) return false;
+        if (hasta && fecha && fecha > hasta) return false;
 
-    const funcionario =
-        valor("filtroFuncionario")
-        .toLowerCase();
-
-    const tipo =
-        valor("filtroTipo")
-        .toLowerCase();
-
-    const estado =
-        valor("filtroEstado")
-        .toLowerCase();
-
-    const semaforo =
-        valor("filtroSemaforo")
-        .toLowerCase();
-
-    const desde =
-        valor("filtroDesde");
-
-    const hasta =
-        valor("filtroHasta");
-
-
-    registrosFiltrados =
-        registros.filter(function(r){
-
-            const rRadicado =
-                textoRegistro(
-                    r,
-                    [
-                        "radicado",
-                        "RADICADO",
-                        "idRadicado",
-                        "ID_RADICADO"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rDocumento =
-                textoRegistro(
-                    r,
-                    [
-                        "documento",
-                        "DOCUMENTO",
-                        "identificacion",
-                        "IDENTIFICACION"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rPeticionario =
-                textoRegistro(
-                    r,
-                    [
-                        "peticionario",
-                        "PETICIONARIO",
-                        "nombre",
-                        "NOMBRE"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rFuncionario =
-                textoRegistro(
-                    r,
-                    [
-                        "funcionario",
-                        "FUNCIONARIO",
-                        "responsable",
-                        "RESPONSABLE"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rTipo =
-                textoRegistro(
-                    r,
-                    [
-                        "tipoPeticion",
-                        "TIPO_PETICION",
-                        "tipo",
-                        "TIPO"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rEstado =
-                textoRegistro(
-                    r,
-                    [
-                        "estado",
-                        "ESTADO"
-                    ]
-                )
-                .toLowerCase();
-
-
-            const rSemaforo =
-                obtenerSemaforo(r)
-                .toLowerCase();
-
-
-            const fecha =
-                normalizarFecha(
-                    textoRegistro(
-                        r,
-                        [
-                            "fechaRecepcion",
-                            "FECHA_RECEPCION",
-                            "fecha",
-                            "FECHA"
-                        ]
-                    )
-                );
-
-
-            if(
-                radicado &&
-                !rRadicado.includes(radicado)
-            ){
-                return false;
-            }
-
-
-            if(
-                documento &&
-                !rDocumento.includes(documento)
-            ){
-                return false;
-            }
-
-
-            if(
-                peticionario &&
-                !rPeticionario.includes(peticionario)
-            ){
-                return false;
-            }
-
-
-            if(
-                funcionario &&
-                !rFuncionario.includes(funcionario)
-            ){
-                return false;
-            }
-
-
-            if(
-                tipo &&
-                !rTipo.includes(tipo)
-            ){
-                return false;
-            }
-
-
-            if(
-                estado &&
-                rEstado!==estado
-            ){
-                return false;
-            }
-
-
-            if(
-                semaforo &&
-                rSemaforo!==semaforo
-            ){
-                return false;
-            }
-
-
-            if(
-                desde &&
-                fecha &&
-                fecha<desde
-            ){
-                return false;
-            }
-
-
-            if(
-                hasta &&
-                fecha &&
-                fecha>hasta
-            ){
-                return false;
-            }
-
-
-            return true;
-
-        });
-
+        return true;
+    });
 
     renderizarTabla();
-
 }
-
 
 /* =========================================================
    TEXTO REGISTRO
 ========================================================= */
 
-function textoRegistro(r,campos){
-
-    for(const campo of campos){
-
-        if(
-            r &&
-            r[campo]!==undefined &&
-            r[campo]!==null
-        ){
-
-            return String(
-                r[campo]
-            );
-
+function textoRegistro(r, campos) {
+    for (const campo of campos) {
+        if (r && r[campo] !== undefined && r[campo] !== null) {
+            return String(r[campo]);
         }
-
     }
-
     return "";
-
 }
-
 
 /* =========================================================
    NORMALIZAR FECHA
 ========================================================= */
 
-function normalizarFecha(valorFecha){
+function normalizarFecha(valorFecha) {
+    if (!valorFecha) return "";
 
-    if(!valorFecha){
-        return "";
+    let fecha = String(valorFecha);
+
+    if (fecha.includes("T")) {
+        fecha = fecha.split("T")[0];
     }
 
-
-    let fecha =
-        String(valorFecha);
-
-
-    if(fecha.includes("T")){
-
-        fecha =
-            fecha.split("T")[0];
-
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha)) {
+        const partes = fecha.split("/");
+        return partes[2] + "-" + partes[1].padStart(2, "0") + "-" + partes[0].padStart(2, "0");
     }
-
-
-    if(
-        /^\d{1,2}\/\d{1,2}\/\d{4}$/
-        .test(fecha)
-    ){
-
-        const partes =
-            fecha.split("/");
-
-        return (
-            partes[2] +
-            "-" +
-            partes[1].padStart(2,"0") +
-            "-" +
-            partes[0].padStart(2,"0")
-        );
-
-    }
-
 
     return fecha;
-
 }
-
 
 /* =========================================================
    SEMÁFORO
 ========================================================= */
 
-function obtenerSemaforo(r){
+function obtenerSemaforo(r) {
+    let dias = textoRegistro(r, ["diasRestantes", "DIAS_RESTANTES", "Días restantes", "dias"]);
 
-    let dias =
-        textoRegistro(
-            r,
-            [
-                "diasRestantes",
-                "DIAS_RESTANTES",
-                "dias",
-                "DIAS"
-            ]
-        );
-
-
-    if(dias!==""){
-
-        dias =
-            parseInt(dias);
-
-        if(!isNaN(dias)){
-
-            if(dias<0){
-                return "VENCIDO";
-            }
-
-            if(dias<=3){
-                return "POR VENCER";
-            }
-
+    if (dias !== "") {
+        dias = parseInt(dias);
+        if (!isNaN(dias)) {
+            if (dias < 0) return "VENCIDO";
+            if (dias <= CONFIG.DIAS_ALERTA) return "POR VENCER";
             return "A TIEMPO";
-
         }
-
     }
 
+    const fechaLimite = normalizarFecha(textoRegistro(r, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"]));
+    if (!fechaLimite) return "";
 
-    const fechaLimite =
-        normalizarFecha(
-            textoRegistro(
-                r,
-                [
-                    "fechaLimite",
-                    "FECHA_LIMITE"
-                ]
-            )
-        );
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const limite = new Date(fechaLimite + "T00:00:00");
+    const diferencia = Math.ceil((limite - hoy) / 86400000);
 
-
-    if(!fechaLimite){
-        return "";
-    }
-
-
-    const hoy =
-        new Date();
-
-    hoy.setHours(
-        0,0,0,0
-    );
-
-
-    const limite =
-        new Date(
-            fechaLimite+"T00:00:00"
-        );
-
-
-    const diferencia =
-        Math.ceil(
-            (
-                limite-hoy
-            ) /
-            86400000
-        );
-
-
-    if(diferencia<0){
-        return "VENCIDO";
-    }
-
-    if(diferencia<=3){
-        return "POR VENCER";
-    }
-
+    if (diferencia < 0) return "VENCIDO";
+    if (diferencia <= CONFIG.DIAS_ALERTA) return "POR VENCER";
     return "A TIEMPO";
-
 }
-
 
 /* =========================================================
    DÍAS RESTANTES
 ========================================================= */
 
-function obtenerDiasRestantes(r){
+function obtenerDiasRestantes(r) {
+    let dias = textoRegistro(r, ["diasRestantes", "DIAS_RESTANTES", "Días restantes", "dias"]);
 
-    let dias =
-        textoRegistro(
-            r,
-            [
-                "diasRestantes",
-                "DIAS_RESTANTES",
-                "dias",
-                "DIAS"
-            ]
-        );
+    if (dias !== "") return parseInt(dias);
 
+    const fechaLimite = normalizarFecha(textoRegistro(r, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"]));
+    if (!fechaLimite) return "";
 
-    if(dias!==""){
-        return parseInt(dias);
-    }
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const limite = new Date(fechaLimite + "T00:00:00");
 
-
-    const fechaLimite =
-        normalizarFecha(
-            textoRegistro(
-                r,
-                [
-                    "fechaLimite",
-                    "FECHA_LIMITE"
-                ]
-            )
-        );
-
-
-    if(!fechaLimite){
-        return "";
-    }
-
-
-    const hoy =
-        new Date();
-
-    hoy.setHours(0,0,0,0);
-
-
-    const limite =
-        new Date(
-            fechaLimite+"T00:00:00"
-        );
-
-
-    return Math.ceil(
-        (
-            limite-hoy
-        ) /
-        86400000
-    );
-
+    return Math.ceil((limite - hoy) / 86400000);
 }
-
 
 /* =========================================================
    RENDER TABLA
 ========================================================= */
 
-function renderizarTabla(){
+function renderizarTabla() {
+    const tbody = document.getElementById("tablaRegistros");
 
-    const tbody =
-        document.getElementById(
-            "tablaRegistros"
-        );
+    if (!tbody) return;
 
-
-    if(
-        !tbody ||
-        !registrosFiltrados.length
-    ){
-
-        tbody.innerHTML=`
-
+    if (!registrosFiltrados.length) {
+        tbody.innerHTML = `
             <tr>
-
                 <td colspan="12">
-
                     <div class="empty-state">
-
                         <div class="empty-icon">
-
-                            <svg viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="2">
-
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 5h16v14H4z"/>
-
                                 <path d="M8 9h8"/>
-
                                 <path d="M8 13h5"/>
-
                             </svg>
-
                         </div>
-
-                        <h3>
-                            No se encontraron registros
-                        </h3>
-
-                        <p>
-                            Ajuste los filtros o registre una nueva petición.
-                        </p>
-
+                        <h3>No se encontraron registros</h3>
+                        <p>Ajuste los filtros o registre una nueva petición.</p>
                     </div>
-
                 </td>
-
             </tr>
-
         `;
-
         return;
-
     }
 
+    tbody.innerHTML = registrosFiltrados.map(function(r, i) {
+        const consecutivo = textoRegistro(r, ["consecutivo", "CONSECUTIVO", "Consecutivo"]);
+        const radicado = textoRegistro(r, ["radicado", "RADICADO", "ID / Radicado"]);
+        const recepcion = formatearFecha(textoRegistro(r, ["fechaRecepcion", "FECHA_RECEPCION", "Fecha recepción"]));
+        const peticionario = textoRegistro(r, ["peticionario", "PETICIONARIO", "Peticionario"]);
+        const documento = textoRegistro(r, ["documento", "DOCUMENTO", "Documento / Identificación"]);
+        const tipo = textoRegistro(r, ["tipoPeticion", "TIPO_PETICION", "Tipo de petición"]);
+        const funcionario = textoRegistro(r, ["funcionario", "FUNCIONARIO", "Funcionario responsable"]);
+        const fechaLimite = formatearFecha(textoRegistro(r, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"]));
+        const dias = obtenerDiasRestantes(r);
+        const semaforo = obtenerSemaforo(r);
+        const estado = textoRegistro(r, ["estado", "ESTADO", "Estado"]);
 
-    tbody.innerHTML =
-        registrosFiltrados
-        .map(function(r,i){
-
-            const consecutivo =
-                textoRegistro(
-                    r,
-                    [
-                        "consecutivo",
-                        "CONSECUTIVO"
-                    ]
-                );
-
-
-            const radicado =
-                textoRegistro(
-                    r,
-                    [
-                        "radicado",
-                        "RADICADO"
-                    ]
-                );
-
-
-            const recepcion =
-                formatearFecha(
-                    textoRegistro(
-                        r,
-                        [
-                            "fechaRecepcion",
-                            "FECHA_RECEPCION"
-                        ]
-                    )
-                );
-
-
-            const peticionario =
-                textoRegistro(
-                    r,
-                    [
-                        "peticionario",
-                        "PETICIONARIO"
-                    ]
-                );
-
-
-            const documento =
-                textoRegistro(
-                    r,
-                    [
-                        "documento",
-                        "DOCUMENTO",
-                        "identificacion",
-                        "IDENTIFICACION"
-                    ]
-                );
-
-
-            const tipo =
-                textoRegistro(
-                    r,
-                    [
-                        "tipoPeticion",
-                        "TIPO_PETICION",
-                        "tipo",
-                        "TIPO"
-                    ]
-                );
-
-
-            const funcionario =
-                textoRegistro(
-                    r,
-                    [
-                        "funcionario",
-                        "FUNCIONARIO"
-                    ]
-                );
-
-
-            const fechaLimite =
-                formatearFecha(
-                    textoRegistro(
-                        r,
-                        [
-                            "fechaLimite",
-                            "FECHA_LIMITE"
-                        ]
-                    )
-                );
-
-
-            const dias =
-                obtenerDiasRestantes(r);
-
-
-            const semaforo =
-                obtenerSemaforo(r);
-
-
-            const estado =
-                textoRegistro(
-                    r,
-                    [
-                        "estado",
-                        "ESTADO"
-                    ]
-                );
-
-
-            return `
-
+        return `
 <tr>
-
-<td>
-    <strong>${escapeHTML(consecutivo)}</strong>
-</td>
-
-<td>
-    ${escapeHTML(radicado)}
-</td>
-
-<td>
-    ${escapeHTML(recepcion)}
-</td>
-
-<td>
-    ${escapeHTML(peticionario)}
-</td>
-
-<td>
-    ${escapeHTML(documento)}
-</td>
-
-<td>
-    ${escapeHTML(tipo)}
-</td>
-
-<td>
-    ${escapeHTML(funcionario)}
-</td>
-
-<td>
-    ${escapeHTML(fechaLimite)}
-</td>
-
-<td>
-    ${formatearDias(dias)}
-</td>
-
-<td>
-    ${badgeSemaforo(semaforo)}
-</td>
-
-<td>
-    ${badgeEstado(estado)}
-</td>
-
-<td>
-
-<div class="actions">
-
-<button
-    class="action-btn"
-    title="Ver detalle"
-    onclick="verDetalle(${i})">
-
-    <svg viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2">
-
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-
-        <circle cx="12"
-                cy="12"
-                r="3"/>
-
-    </svg>
-
-</button>
-
-
-<button
-    class="action-btn"
-    title="Editar"
-    onclick="editarRegistro(${i})">
-
-    <svg viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2">
-
-        <path d="M12 20h9"/>
-
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-
-    </svg>
-
-</button>
-
-
-<button
-    class="action-btn"
-    title="Generar PDF"
-    onclick="generarPDF(${i})">
-
-    <svg viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2">
-
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-
-        <path d="M14 2v6h6"/>
-
-        <path d="M8 13h8"/>
-
-        <path d="M8 17h6"/>
-
-    </svg>
-
-</button>
-
-</div>
-
-</td>
-
+    <td><strong>${escapeHTML(consecutivo)}</strong></td>
+    <td>${escapeHTML(radicado)}</td>
+    <td>${escapeHTML(recepcion)}</td>
+    <td>${escapeHTML(peticionario)}</td>
+    <td>${escapeHTML(documento)}</td>
+    <td>${escapeHTML(tipo)}</td>
+    <td>${escapeHTML(funcionario)}</td>
+    <td>${escapeHTML(fechaLimite)}</td>
+    <td>${formatearDias(dias)}</td>
+    <td>${badgeSemaforo(semaforo)}</td>
+    <td>${badgeEstado(estado)}</td>
+    <td>
+        <div class="actions">
+            <button class="action-btn" title="Ver detalle" onclick="verDetalle(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </button>
+            <button class="action-btn" title="Editar" onclick="editarRegistro(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                </svg>
+            </button>
+            <button class="action-btn" title="Generar PDF" onclick="generarPDF(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6"/>
+                    <path d="M8 13h8"/>
+                    <path d="M8 17h6"/>
+                </svg>
+            </button>
+        </div>
+    </td>
 </tr>
-
-`;
-
-        })
-        .join("");
-
+        `;
+    }).join("");
 }
-
 
 /* =========================================================
    BADGE ESTADO
 ========================================================= */
 
-function badgeEstado(estado){
+function badgeEstado(estado) {
+    const e = String(estado || "").toUpperCase();
+    let clase = "badge-pendiente";
 
-    const e =
-        String(estado || "")
-        .toUpperCase();
+    if (e.includes("TRÁMITE") || e.includes("TRAMITE")) clase = "badge-tramite";
+    else if (e.includes("RESPOND")) clase = "badge-respondido";
+    else if (e.includes("CERR")) clase = "badge-cerrado";
 
-
-    let clase =
-        "badge-pendiente";
-
-
-    if(e.includes("TRÁMITE") || e.includes("TRAMITE")){
-
-        clase="badge-tramite";
-
-    }
-
-    else if(e.includes("RESPOND")){
-
-        clase="badge-respondido";
-
-    }
-
-    else if(e.includes("CERR")){
-
-        clase="badge-cerrado";
-
-    }
-
-
-    return `
-        <span class="badge ${clase}">
-            ${escapeHTML(e)}
-        </span>
-    `;
-
+    return `<span class="badge ${clase}">${escapeHTML(e)}</span>`;
 }
-
 
 /* =========================================================
    BADGE SEMÁFORO
 ========================================================= */
 
-function badgeSemaforo(semaforo){
+function badgeSemaforo(semaforo) {
+    const s = String(semaforo || "").toUpperCase();
 
-    const s =
-        String(semaforo || "")
-        .toUpperCase();
-
-
-    if(s==="VENCIDO"){
-
-        return `
-            <span class="semaforo rojo">
-                VENCIDO
-            </span>
-        `;
-
-    }
-
-
-    if(s==="POR VENCER"){
-
-        return `
-            <span class="semaforo amarillo">
-                POR VENCER
-            </span>
-        `;
-
-    }
-
-
-    if(s==="A TIEMPO"){
-
-        return `
-            <span class="semaforo verde">
-                A TIEMPO
-            </span>
-        `;
-
-    }
-
+    if (s === "VENCIDO") return `<span class="semaforo rojo">VENCIDO</span>`;
+    if (s === "POR VENCER") return `<span class="semaforo amarillo">POR VENCER</span>`;
+    if (s === "A TIEMPO") return `<span class="semaforo verde">A TIEMPO</span>`;
 
     return "";
-
 }
-
 
 /* =========================================================
    DÍAS
 ========================================================= */
 
-function formatearDias(dias){
+function formatearDias(dias) {
+    if (dias === "" || dias === null || isNaN(dias)) return "-";
 
-    if(
-        dias === "" ||
-        dias === null ||
-        isNaN(dias)
-    ){
+    dias = parseInt(dias);
 
-        return "-";
-
+    if (dias < 0) {
+        return `<span style="color:#d93025;font-weight:800">${dias}</span>`;
     }
-
-
-    dias=parseInt(dias);
-
-
-    if(dias<0){
-
-        return `
-            <span style="color:#d93025;font-weight:800">
-                ${dias}
-            </span>
-        `;
-
+    if (dias <= CONFIG.DIAS_ALERTA) {
+        return `<span style="color:#a46a00;font-weight:800">${dias}</span>`;
     }
-
-
-    if(dias<=3){
-
-        return `
-            <span style="color:#a46a00;font-weight:800">
-                ${dias}
-            </span>
-        `;
-
-    }
-
-
-    return `
-        <span style="color:#188038;font-weight:750">
-            ${dias}
-        </span>
-    `;
-
+    return `<span style="color:#188038;font-weight:750">${dias}</span>`;
 }
-
 
 /* =========================================================
    FECHA
 ========================================================= */
 
-function formatearFecha(fecha){
+function formatearFecha(fecha) {
+    if (!fecha) return "";
 
-    if(!fecha){
-        return "";
+    const normalizada = normalizarFecha(fecha);
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalizada)) {
+        const p = normalizada.split("-");
+        return p[2] + "/" + p[1] + "/" + p[0];
     }
-
-
-    const normalizada =
-        normalizarFecha(fecha);
-
-
-    if(
-        /^\d{4}-\d{2}-\d{2}$/
-        .test(normalizada)
-    ){
-
-        const p =
-            normalizada.split("-");
-
-
-        return (
-            p[2] +
-            "/" +
-            p[1] +
-            "/" +
-            p[0]
-        );
-
-    }
-
 
     return fecha;
-
 }
-
 
 /* =========================================================
    DASHBOARD
 ========================================================= */
 
-function actualizarDashboard(){
+function actualizarDashboard() {
+    const total = registros.length;
+    let pendientes = 0, tramite = 0, respondidas = 0, vencidas = 0;
 
-    const total =
-        registros.length;
+    registros.forEach(function(r) {
+        const estado = textoRegistro(r, ["estado", "ESTADO", "Estado"]).toUpperCase();
 
-
-    let pendientes=0;
-    let tramite=0;
-    let respondidas=0;
-    let vencidas=0;
-
-
-    registros.forEach(function(r){
-
-        const estado =
-            textoRegistro(
-                r,
-                [
-                    "estado",
-                    "ESTADO"
-                ]
-            )
-            .toUpperCase();
-
-
-        if(estado==="PENDIENTE"){
-            pendientes++;
-        }
-
-
-        if(
-            estado==="EN TRÁMITE" ||
-            estado==="EN TRAMITE"
-        ){
-            tramite++;
-        }
-
-
-        if(
-            estado==="RESPONDIDO" ||
-            estado==="CERRADO"
-        ){
-            respondidas++;
-        }
-
-
-        if(
-            obtenerSemaforo(r)==="VENCIDO"
-        ){
-            vencidas++;
-        }
-
+        if (estado === "PENDIENTE") pendientes++;
+        if (estado === "EN TRÁMITE" || estado === "EN TRAMITE") tramite++;
+        if (estado === "RESPONDIDO" || estado === "CERRADO") respondidas++;
+        if (obtenerSemaforo(r) === "VENCIDO") vencidas++;
     });
 
-
-    animarNumero(
-        "kpiTotal",
-        total
-    );
-
-    animarNumero(
-        "kpiPendientes",
-        pendientes
-    );
-
-    animarNumero(
-        "kpiTramite",
-        tramite
-    );
-
-    animarNumero(
-        "kpiRespondidas",
-        respondidas
-    );
-
-    animarNumero(
-        "kpiVencidas",
-        vencidas
-    );
-
+    animarNumero("kpiTotal", total);
+    animarNumero("kpiPendientes", pendientes);
+    animarNumero("kpiTramite", tramite);
+    animarNumero("kpiRespondidas", respondidas);
+    animarNumero("kpiVencidas", vencidas);
 }
-
 
 /* =========================================================
    ANIMACIÓN NÚMEROS
 ========================================================= */
 
-function animarNumero(id,valorFinal){
+function animarNumero(id, valorFinal) {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-    const el =
-        document.getElementById(id);
-
-
-    if(!el){
+    const inicio = parseInt(el.textContent) || 0;
+    if (inicio === valorFinal) {
+        el.textContent = valorFinal;
         return;
     }
 
+    const duracion = 350;
+    const inicioTiempo = performance.now();
 
-    const inicio =
-        parseInt(el.textContent) || 0;
+    function animar(tiempo) {
+        const progreso = Math.min((tiempo - inicioTiempo) / duracion, 1);
+        const valor = Math.round(inicio + (valorFinal - inicio) * progreso);
+        el.textContent = valor;
 
-
-    if(inicio===valorFinal){
-
-        el.textContent=valorFinal;
-
-        return;
-
-    }
-
-
-    const duracion=350;
-
-    const inicioTiempo=
-        performance.now();
-
-
-    function animar(tiempo){
-
-        const progreso =
-            Math.min(
-                (tiempo-inicioTiempo) /
-                duracion,
-                1
-            );
-
-
-        const valor =
-            Math.round(
-                inicio +
-                (
-                    valorFinal-inicio
-                ) *
-                progreso
-            );
-
-
-        el.textContent=valor;
-
-
-        if(progreso<1){
-
-            requestAnimationFrame(
-                animar
-            );
-
+        if (progreso < 1) {
+            requestAnimationFrame(animar);
         }
-
     }
-
 
     requestAnimationFrame(animar);
-
 }
-
 
 /* =========================================================
    VER DETALLE
 ========================================================= */
 
-function verDetalle(indice){
+function verDetalle(indice) {
+    const registro = registrosFiltrados[indice];
+    if (!registro) return;
 
-    const registro =
-        registrosFiltrados[indice];
+    detalleActual = registro;
 
+    const contenido = document.getElementById("detalleContenido");
 
-    if(!registro){
-        return;
-    }
-
-
-    detalleActual=registro;
-
-
-    const contenido =
-        document.getElementById(
-            "detalleContenido"
-        );
-
-
-    const campos=[
-
-        [
-            "Consecutivo",
-            textoRegistro(
-                registro,
-                [
-                    "consecutivo",
-                    "CONSECUTIVO"
-                ]
-            )
-        ],
-
-        [
-            "Radicado",
-            textoRegistro(
-                registro,
-                [
-                    "radicado",
-                    "RADICADO"
-                ]
-            )
-        ],
-
-        [
-            "Fecha de recepción",
-            formatearFecha(
-                textoRegistro(
-                    registro,
-                    [
-                        "fechaRecepcion",
-                        "FECHA_RECEPCION"
-                    ]
-                )
-            )
-        ],
-
-        [
-            "Peticionario",
-            textoRegistro(
-                registro,
-                [
-                    "peticionario",
-                    "PETICIONARIO"
-                ]
-            )
-        ],
-
-        [
-            "Documento",
-            textoRegistro(
-                registro,
-                [
-                    "documento",
-                    "DOCUMENTO",
-                    "identificacion",
-                    "IDENTIFICACION"
-                ]
-            )
-        ],
-
-        [
-            "Teléfono",
-            textoRegistro(
-                registro,
-                [
-                    "telefono",
-                    "TELEFONO"
-                ]
-            )
-        ],
-
-        [
-            "Correo",
-            textoRegistro(
-                registro,
-                [
-                    "correo",
-                    "CORREO"
-                ]
-            )
-        ],
-
-        [
-            "Tipo de petición",
-            textoRegistro(
-                registro,
-                [
-                    "tipoPeticion",
-                    "TIPO_PETICION",
-                    "tipo",
-                    "TIPO"
-                ]
-            )
-        ],
-
-        [
-            "Funcionario",
-            textoRegistro(
-                registro,
-                [
-                    "funcionario",
-                    "FUNCIONARIO"
-                ]
-            )
-        ],
-
-        [
-            "Asunto",
-            textoRegistro(
-                registro,
-                [
-                    "asunto",
-                    "ASUNTO"
-                ]
-            )
-        ],
-
-        [
-            "Término",
-            textoRegistro(
-                registro,
-                [
-                    "termino",
-                    "TERMINO"
-                ]
-            )
-        ],
-
-        [
-            "Fecha límite",
-            formatearFecha(
-                textoRegistro(
-                    registro,
-                    [
-                        "fechaLimite",
-                        "FECHA_LIMITE"
-                    ]
-                )
-            )
-        ],
-
-        [
-            "Estado",
-            textoRegistro(
-                registro,
-                [
-                    "estado",
-                    "ESTADO"
-                ]
-            )
-        ],
-
-        [
-            "Fecha respuesta",
-            formatearFecha(
-                textoRegistro(
-                    registro,
-                    [
-                        "fechaRespuesta",
-                        "FECHA_RESPUESTA"
-                    ]
-                )
-            )
-        ],
-
-        [
-            "Medio de respuesta",
-            textoRegistro(
-                registro,
-                [
-                    "medioRespuesta",
-                    "MEDIO_RESPUESTA"
-                ]
-            )
-        ],
-
-        [
-            "Observaciones",
-            textoRegistro(
-                registro,
-                [
-                    "observaciones",
-                    "OBSERVACIONES"
-                ]
-            )
-        ]
-
+    const campos = [
+        ["Consecutivo", textoRegistro(registro, ["consecutivo", "CONSECUTIVO", "Consecutivo"])],
+        ["Radicado", textoRegistro(registro, ["radicado", "RADICADO", "ID / Radicado"])],
+        ["Fecha de recepción", formatearFecha(textoRegistro(registro, ["fechaRecepcion", "FECHA_RECEPCION", "Fecha recepción"]))],
+        ["Peticionario", textoRegistro(registro, ["peticionario", "PETICIONARIO", "Peticionario"])],
+        ["Documento", textoRegistro(registro, ["documento", "DOCUMENTO", "Documento / Identificación"])],
+        ["Teléfono", textoRegistro(registro, ["telefono", "TELEFONO", "Teléfono"])],
+        ["Correo", textoRegistro(registro, ["correo", "CORREO", "Correo"])],
+        ["Tipo de petición", textoRegistro(registro, ["tipoPeticion", "TIPO_PETICION", "Tipo de petición"])],
+        ["Funcionario", textoRegistro(registro, ["funcionario", "FUNCIONARIO", "Funcionario responsable"])],
+        ["Asunto", textoRegistro(registro, ["asunto", "ASUNTO", "Asunto"])],
+        ["Término", textoRegistro(registro, ["termino", "TERMINO", "Término (días)"])],
+        ["Fecha límite", formatearFecha(textoRegistro(registro, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"]))],
+        ["Estado", textoRegistro(registro, ["estado", "ESTADO", "Estado"])],
+        ["Fecha respuesta", formatearFecha(textoRegistro(registro, ["fechaRespuesta", "FECHA_RESPUESTA", "Fecha de respuesta"]))],
+        ["Medio de respuesta", textoRegistro(registro, ["medioRespuesta", "MEDIO_RESPUESTA", "Medio de respuesta"])],
+        ["Observaciones", textoRegistro(registro, ["observaciones", "OBSERVACIONES", "Observaciones"])]
     ];
 
-
-    contenido.innerHTML=
-
-        `<div class="detail-grid">` +
-
-        campos
-        .map(function(campo){
-
-            const full =
-                campo[0]==="Asunto" ||
-                campo[0]==="Observaciones";
-
-
+    contenido.innerHTML = `<div class="detail-grid">` +
+        campos.map(function(campo) {
+            const full = campo[0] === "Asunto" || campo[0] === "Observaciones";
             return `
-
-                <div class="detail-item ${full ? "full":""}">
-
-                    <div class="detail-label">
-                        ${escapeHTML(campo[0])}
-                    </div>
-
-                    <div class="detail-value">
-                        ${escapeHTML(
-                            campo[1] || "-"
-                        )}
-                    </div>
-
+                <div class="detail-item ${full ? "full" : ""}">
+                    <div class="detail-label">${escapeHTML(campo[0])}</div>
+                    <div class="detail-value">${escapeHTML(campo[1] || "-")}</div>
                 </div>
-
             `;
+        }).join("") + `</div>`;
 
-        })
-        .join("") +
-
-        `</div>`;
-
-
-    abrirModal(
-        "modalDetalle"
-    );
-
+    abrirModal("modalDetalle");
 }
-
 
 /* =========================================================
    EDITAR
 ========================================================= */
 
-function editarRegistro(indice){
+function editarRegistro(indice) {
+    const registro = registrosFiltrados[indice];
+    if (!registro) return;
 
-    const registro =
-        registrosFiltrados[indice];
+    registroEditando = registro;
+    cerrarModal("modalDetalle");
+    mostrarTab("registro", document.querySelector(".tab"));
 
+    establecerValor("consecutivo", textoRegistro(registro, ["consecutivo", "CONSECUTIVO", "Consecutivo"]));
+    establecerValor("radicado", textoRegistro(registro, ["radicado", "RADICADO", "ID / Radicado"]));
+    establecerValor("fechaRecepcion", normalizarFecha(textoRegistro(registro, ["fechaRecepcion", "FECHA_RECEPCION", "Fecha recepción"])));
+    establecerValor("peticionario", textoRegistro(registro, ["peticionario", "PETICIONARIO", "Peticionario"]));
+    establecerValor("documento", textoRegistro(registro, ["documento", "DOCUMENTO", "Documento / Identificación"]));
+    establecerValor("telefono", textoRegistro(registro, ["telefono", "TELEFONO", "Teléfono"]));
+    establecerValor("correo", textoRegistro(registro, ["correo", "CORREO", "Correo"]));
+    establecerValor("tipoPeticion", textoRegistro(registro, ["tipoPeticion", "TIPO_PETICION", "Tipo de petición"]));
+    establecerValor("funcionario", textoRegistro(registro, ["funcionario", "FUNCIONARIO", "Funcionario responsable"]));
+    establecerValor("asunto", textoRegistro(registro, ["asunto", "ASUNTO", "Asunto"]));
+    establecerValor("termino", textoRegistro(registro, ["termino", "TERMINO", "Término (días)"]));
+    establecerValor("fechaLimite", normalizarFecha(textoRegistro(registro, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"])));
+    establecerValor("estado", textoRegistro(registro, ["estado", "ESTADO", "Estado"]));
+    establecerValor("fechaRespuesta", normalizarFecha(textoRegistro(registro, ["fechaRespuesta", "FECHA_RESPUESTA", "Fecha de respuesta"])));
+    establecerValor("medioRespuesta", textoRegistro(registro, ["medioRespuesta", "MEDIO_RESPUESTA", "Medio de respuesta"]));
+    establecerValor("observaciones", textoRegistro(registro, ["observaciones", "OBSERVACIONES", "Observaciones"]));
 
-    if(!registro){
-        return;
-    }
+    calcularFechaLimite();
 
-
-    registroEditando=registro;
-
-
-    cerrarModal(
-        "modalDetalle"
-    );
-
-
-    mostrarTab(
-        "registro",
-        document.querySelector(
-            ".tab"
-        )
-    );
-
-
-    establecerValor(
-        "consecutivo",
-        textoRegistro(
-            registro,
-            [
-                "consecutivo",
-                "CONSECUTIVO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "radicado",
-        textoRegistro(
-            registro,
-            [
-                "radicado",
-                "RADICADO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "fechaRecepcion",
-        normalizarFecha(
-            textoRegistro(
-                registro,
-                [
-                    "fechaRecepcion",
-                    "FECHA_RECEPCION"
-                ]
-            )
-        )
-    );
-
-
-    establecerValor(
-        "peticionario",
-        textoRegistro(
-            registro,
-            [
-                "peticionario",
-                "PETICIONARIO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "documento",
-        textoRegistro(
-            registro,
-            [
-                "documento",
-                "DOCUMENTO",
-                "identificacion",
-                "IDENTIFICACION"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "telefono",
-        textoRegistro(
-            registro,
-            [
-                "telefono",
-                "TELEFONO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "correo",
-        textoRegistro(
-            registro,
-            [
-                "correo",
-                "CORREO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "tipoPeticion",
-        textoRegistro(
-            registro,
-            [
-                "tipoPeticion",
-                "TIPO_PETICION",
-                "tipo",
-                "TIPO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "funcionario",
-        textoRegistro(
-            registro,
-            [
-                "funcionario",
-                "FUNCIONARIO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "asunto",
-        textoRegistro(
-            registro,
-            [
-                "asunto",
-                "ASUNTO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "termino",
-        textoRegistro(
-            registro,
-            [
-                "termino",
-                "TERMINO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "fechaLimite",
-        normalizarFecha(
-            textoRegistro(
-                registro,
-                [
-                    "fechaLimite",
-                    "FECHA_LIMITE"
-                ]
-            )
-        )
-    );
-
-
-    establecerValor(
-        "estado",
-        textoRegistro(
-            registro,
-            [
-                "estado",
-                "ESTADO"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "fechaRespuesta",
-        normalizarFecha(
-            textoRegistro(
-                registro,
-                [
-                    "fechaRespuesta",
-                    "FECHA_RESPUESTA"
-                ]
-            )
-        )
-    );
-
-
-    establecerValor(
-        "medioRespuesta",
-        textoRegistro(
-            registro,
-            [
-                "medioRespuesta",
-                "MEDIO_RESPUESTA"
-            ]
-        )
-    );
-
-
-    establecerValor(
-        "observaciones",
-        textoRegistro(
-            registro,
-            [
-                "observaciones",
-                "OBSERVACIONES"
-            ]
-        )
-    );
-
-
-    const btn =
-        document.getElementById(
-            "btnGuardar"
-        );
-
-
-    btn.innerHTML=`
-
-        <svg viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2">
-
+    const btn = document.getElementById("btnGuardar");
+    btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 20h9"/>
-
             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-
         </svg>
-
         Actualizar petición
-
     `;
 
-
-    document
-        .getElementById("radicado")
-        .focus();
-
+    document.getElementById("radicado").focus();
 }
 
-
-/* =========================================================
-   ESTABLECER VALOR
-========================================================= */
-
-function establecerValor(id,valor){
-
-    const el =
-        document.getElementById(id);
-
-
-    if(el){
-        el.value =
-            valor || "";
-    }
-
+function establecerValor(id, valor) {
+    const el = document.getElementById(id);
+    if (el) el.value = valor || "";
 }
 
-
-/* =========================================================
-   EDITAR DESDE DETALLE
-========================================================= */
-
-function editarDesdeDetalle(){
-
-    if(!detalleActual){
-        return;
-    }
-
-
-    const indice =
-        registrosFiltrados.indexOf(
-            detalleActual
-        );
-
-
-    if(indice>=0){
-
-        editarRegistro(indice);
-
-    }
-
+function editarDesdeDetalle() {
+    if (!detalleActual) return;
+    const indice = registrosFiltrados.indexOf(detalleActual);
+    if (indice >= 0) editarRegistro(indice);
 }
-
 
 /* =========================================================
    GENERAR PDF
 ========================================================= */
 
-function generarPDF(indice){
+function generarPDF(indice) {
+    const registro = registrosFiltrados[indice];
+    if (!registro) return;
 
-    const registro =
-        registrosFiltrados[indice];
+    mostrarLoading("Generando documento PDF...");
 
-
-    if(!registro){
-        return;
-    }
-
-
-    mostrarLoading(
-        "Generando documento PDF..."
-    );
-
-
-    if(!ES_APPS_SCRIPT){
-
+    if (!ES_APPS_SCRIPT) {
         ocultarLoading();
-
-        mostrarToast(
-            "La generación del PDF debe realizarse desde la aplicación de Apps Script.",
-            "warning"
-        );
-
+        mostrarToast("La generación del PDF debe realizarse desde la aplicación de Apps Script.", "warning");
         return;
-
     }
-
 
     google.script.run
-
-        .withSuccessHandler(function(respuesta){
-
+        .withSuccessHandler(function(respuesta) {
             ocultarLoading();
 
-
-            if(
-                !respuesta ||
-                respuesta.exito===false
-            ){
-
-                mostrarToast(
-                    respuesta?.mensaje ||
-                    "No fue posible generar el PDF.",
-                    "error"
-                );
-
+            if (!respuesta || respuesta.ok === false) {
+                mostrarToast(respuesta?.mensaje || respuesta?.message || "No fue posible generar el PDF.", "error");
                 return;
-
             }
 
-
-            const base64 =
-                respuesta.base64 ||
-                respuesta.data ||
-                "";
-
-
-            if(!base64){
-
-                mostrarToast(
-                    "El servidor no devolvió el archivo PDF.",
-                    "error"
-                );
-
+            const base64 = respuesta.base64 || respuesta.data || "";
+            if (!base64) {
+                mostrarToast("El servidor no devolvió el archivo PDF.", "error");
                 return;
-
             }
 
+            const blob = base64ToBlob(base64, "application/pdf");
+            const url = URL.createObjectURL(blob);
 
-            const blob =
-                base64ToBlob(
-                    base64,
-                    "application/pdf"
-                );
+            document.getElementById("pdfViewer").src = url;
+            document.getElementById("pdfViewer").dataset.url = url;
 
-
-            const url =
-                URL.createObjectURL(blob);
-
-
-            document
-                .getElementById("pdfViewer")
-                .src=url;
-
-
-            document
-                .getElementById("pdfViewer")
-                .dataset.url=url;
-
-
-            abrirModal(
-                "modalPDF"
-            );
-
+            abrirModal("modalPDF");
         })
-
-        .withFailureHandler(function(error){
-
+        .withFailureHandler(function(error) {
             ocultarLoading();
-
-            mostrarToast(
-                obtenerMensajeError(error),
-                "error"
-            );
-
+            mostrarToast(obtenerMensajeError(error), "error");
         })
-
         .generarReportePDF(registro);
-
 }
-
 
 /* =========================================================
    BASE64 → BLOB
 ========================================================= */
 
-function base64ToBlob(base64,tipo){
+function base64ToBlob(base64, tipo) {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
 
-    const byteCharacters =
-        atob(base64);
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
 
-
-    const byteArrays=[];
-
-
-    for(
-        let offset=0;
-        offset<byteCharacters.length;
-        offset+=512
-    ){
-
-        const slice =
-            byteCharacters.slice(
-                offset,
-                offset+512
-            );
-
-
-        const byteNumbers =
-            new Array(
-                slice.length
-            );
-
-
-        for(
-            let i=0;
-            i<slice.length;
-            i++
-        ){
-
-            byteNumbers[i]=
-                slice.charCodeAt(i);
-
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
         }
 
-
-        byteArrays.push(
-            new Uint8Array(
-                byteNumbers
-            )
-        );
-
+        byteArrays.push(new Uint8Array(byteNumbers));
     }
 
-
-    return new Blob(
-        byteArrays,
-        {
-            type:tipo
-        }
-    );
-
+    return new Blob(byteArrays, { type: tipo });
 }
-
 
 /* =========================================================
    DESCARGAR PDF
 ========================================================= */
 
-function descargarPDF(){
+function descargarPDF() {
+    const iframe = document.getElementById("pdfViewer");
+    const url = iframe.dataset.url;
 
-    const iframe =
-        document.getElementById(
-            "pdfViewer"
-        );
-
-
-    const url =
-        iframe.dataset.url;
-
-
-    if(!url){
-
-        mostrarToast(
-            "No hay PDF disponible.",
-            "warning"
-        );
-
+    if (!url) {
+        mostrarToast("No hay PDF disponible.", "warning");
         return;
-
     }
 
-
-    const enlace =
-        document.createElement("a");
-
-
-    enlace.href=url;
-
-    enlace.download=
-        "Peticion.pdf";
-
-
-    document.body.appendChild(
-        enlace
-    );
-
-
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = "Peticion.pdf";
+    document.body.appendChild(enlace);
     enlace.click();
-
     enlace.remove();
-
 }
-
 
 /* =========================================================
    IMPRIMIR PDF
 ========================================================= */
 
-function imprimirPDF(){
-
-    const iframe =
-        document.getElementById(
-            "pdfViewer"
-        );
-
-
-    if(iframe){
-
+function imprimirPDF() {
+    const iframe = document.getElementById("pdfViewer");
+    if (iframe) {
         iframe.contentWindow.focus();
-
         iframe.contentWindow.print();
-
     }
-
 }
-
 
 /* =========================================================
-   MODALES
+   MODALES (CORREGIDO: libera memoria del PDF)
 ========================================================= */
 
-function abrirModal(id){
-
-    const modal =
-        document.getElementById(id);
-
-
-    if(modal){
-
-        modal.classList.add("show");
-
-    }
-
+function abrirModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add("show");
 }
 
+function cerrarModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove("show");
 
-function cerrarModal(id){
-
-    const modal =
-        document.getElementById(id);
-
-
-    if(modal){
-
-        modal.classList.remove("show");
-
-    }
-
-}
-
-
-function cerrarModalFondo(event){
-
-    if(
-        event.target.classList.contains(
-            "modal"
-        )
-    ){
-
-        event.target.classList.remove(
-            "show"
-        );
-
-    }
-
-}
-
-
-document.addEventListener(
-    "keydown",
-    function(event){
-
-        if(event.key==="Escape"){
-
-            document
-                .querySelectorAll(".modal.show")
-                .forEach(function(modal){
-
-                    modal.classList.remove(
-                        "show"
-                    );
-
-                });
-
+    // ✅ CORREGIDO: Liberar memoria del PDF al cerrar el modal
+    if (id === "modalPDF") {
+        const iframe = document.getElementById("pdfViewer");
+        if (iframe && iframe.dataset.url) {
+            try {
+                URL.revokeObjectURL(iframe.dataset.url);
+            } catch (e) {
+                console.warn("No se pudo liberar URL del PDF:", e);
+            }
+            iframe.src = "";
+            delete iframe.dataset.url;
         }
-
     }
-);
+}
 
+function cerrarModalFondo(event) {
+    if (event.target.classList.contains("modal")) {
+        cerrarModal(event.target.id);
+    }
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        document.querySelectorAll(".modal.show").forEach(function(modal) {
+            cerrarModal(modal.id);
+        });
+    }
+});
 
 /* =========================================================
    LOADING
 ========================================================= */
 
-function mostrarLoading(texto){
+function mostrarLoading(texto) {
+    const overlay = document.getElementById("loadingOverlay");
+    const mensaje = document.getElementById("loadingText");
 
-    const overlay =
-        document.getElementById(
-            "loadingOverlay"
-        );
-
-
-    const mensaje =
-        document.getElementById(
-            "loadingText"
-        );
-
-
-    if(mensaje){
-
-        mensaje.textContent =
-            texto ||
-            "Procesando información...";
-
-    }
-
-
-    if(overlay){
-
-        overlay.classList.add(
-            "show"
-        );
-
-    }
-
+    if (mensaje) mensaje.textContent = texto || "Procesando información...";
+    if (overlay) overlay.classList.add("show");
 }
 
-
-function ocultarLoading(){
-
-    const overlay =
-        document.getElementById(
-            "loadingOverlay"
-        );
-
-
-    if(overlay){
-
-        overlay.classList.remove(
-            "show"
-        );
-
-    }
-
+function ocultarLoading() {
+    const overlay = document.getElementById("loadingOverlay");
+    if (overlay) overlay.classList.remove("show");
 }
-
 
 /* =========================================================
    TOAST
 ========================================================= */
 
-function mostrarToast(mensaje,tipo="info"){
+function mostrarToast(mensaje, tipo = "info") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
 
-    const container =
-        document.getElementById(
-            "toastContainer"
-        );
+    const toast = document.createElement("div");
+    toast.className = "toast " + tipo;
 
+    let icono = "i";
+    if (tipo === "success") icono = "✓";
+    else if (tipo === "error") icono = "!";
+    else if (tipo === "warning") icono = "!";
 
-    if(!container){
-        return;
-    }
-
-
-    const toast =
-        document.createElement(
-            "div"
-        );
-
-
-    toast.className =
-        "toast " + tipo;
-
-
-    let icono="i";
-
-
-    if(tipo==="success"){
-        icono="✓";
-    }
-
-    else if(tipo==="error"){
-        icono="!";
-    }
-
-    else if(tipo==="warning"){
-        icono="!";
-    }
-
-
-    toast.innerHTML=`
-
-        <div class="toast-icon">
-            ${icono}
-        </div>
-
-        <div class="toast-message">
-            ${escapeHTML(mensaje)}
-        </div>
-
+    toast.innerHTML = `
+        <div class="toast-icon">${icono}</div>
+        <div class="toast-message">${escapeHTML(mensaje)}</div>
     `;
 
+    container.appendChild(toast);
 
-    container.appendChild(
-        toast
-    );
-
-
-    setTimeout(function(){
-
-        toast.style.opacity="0";
-
-        toast.style.transform=
-            "translateX(20px)";
-
-
-        setTimeout(
-            ()=>toast.remove(),
-            250
-        );
-
-    },4500);
-
+    setTimeout(function() {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(20px)";
+        toast.style.transition = "opacity .25s, transform .25s";
+        setTimeout(() => toast.remove(), 250);
+    }, 4500);
 }
-
 
 /* =========================================================
    ERROR
 ========================================================= */
 
-function obtenerMensajeError(error){
-
-    if(!error){
-        return "Ocurrió un error inesperado.";
-    }
-
-
-    if(typeof error==="string"){
-        return error;
-    }
-
-
-    return (
-        error.message ||
-        error.error ||
-        "Ocurrió un error inesperado."
-    );
-
+function obtenerMensajeError(error) {
+    if (!error) return "Ocurrió un error inesperado.";
+    if (typeof error === "string") return error;
+    return error.message || error.error || "Ocurrió un error inesperado.";
 }
-
 
 /* =========================================================
    ESCAPE HTML
 ========================================================= */
 
-function escapeHTML(valor){
-
+function escapeHTML(valor) {
     return String(valor ?? "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 </script>
