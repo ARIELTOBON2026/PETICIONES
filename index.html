@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestión de Peticiones - La Ceja</title>
 <style>
-:root{--azul:#174ea6;--azul-oscuro:#0d2f68;--azul-medio:#2563c7;--azul-claro:#eaf2ff;--verde:#188038;--verde-oscuro:#116329;--verde-claro:#e8f5ec;--rojo:#d93025;--rojo-claro:#fdeceb;--amarillo:#f9ab00;--amarillo-claro:#fff7df;--morado:#6d4aff;--morado-claro:#f0edff;--gris:#64748b;--gris-oscuro:#334155;--gris-claro:#f4f7fa;--gris-borde:#dce3eb;--blanco:#ffffff;--texto:#172033;--sombra:0 8px 25px rgba(15,23,42,.08);--sombra-hover:0 12px 30px rgba(15,23,42,.13);--radio:16px}
+:root{--azul:#174ea6;--azul-oscuro:#0d2f68;--azul-medio:#2563c7;--azul-claro:#eaf2ff;--verde:#188038;--verde-oscuro:#116329;--verde-claro:#e8f5ec;--rojo:#d93025;--rojo-claro:#fdeceb;--amarillo:#f9ab00;--amarillo-claro:#fff7df;--morado:#6d4aff;--morado-claro:#f0edff;--gris:#64748b;--gris-oscuro:#334155;--gris-claro:#f4f7fa;--gris-borde:#dce3eb;--blanco:#ffffff;--texto:#172033;--sombra:0 8px 25px rgba(15,23,42,.08);--sombra-hover:0 12px 30px rgba(15,23,42,.13);--radio:16px;
+/* Identidad institucional: colores de la bandera de La Ceja del Tambo */
+--bandera-amarillo:#f4c430;--bandera-rojo:#d93025;--bandera-verde:#1f8a3d;
+--fila-altura-comoda:13px;--fila-altura-compacta:7px}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#eef4fa 0%,#f8fafc 45%,#edf3f8 100%);color:var(--texto);min-height:100vh}
@@ -17,10 +20,17 @@ body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:linear-gradient(1
 .container{width:min(1500px,94%);margin:auto}
 .topbar{position:relative;overflow:hidden;background:linear-gradient(120deg,#0d2f68 0%,#174ea6 55%,#123b7a 100%);color:white;box-shadow:0 5px 20px rgba(13,47,104,.22)}
 .topbar::after{content:"";position:absolute;width:420px;height:420px;right:-180px;top:-260px;border-radius:50%;background:rgba(255,255,255,.07)}
+.bandera-franja{display:flex;height:5px;width:100%}
+.bandera-franja span{flex:1}
+.bandera-franja span:nth-child(1){background:var(--bandera-amarillo)}
+.bandera-franja span:nth-child(2){background:var(--bandera-rojo)}
+.bandera-franja span:nth-child(3){background:var(--bandera-verde)}
 .topbar-inner{position:relative;z-index:2;min-height:100px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:18px 0}
 .brand{display:flex;align-items:center;gap:16px}
-.brand-icon{width:62px;height:62px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:17px;background:white;color:var(--azul);box-shadow:0 5px 15px rgba(0,0,0,.15)}
-.brand-icon svg{width:36px;height:36px}
+.brand-icon{width:62px;height:62px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:17px;background:white;color:var(--azul);box-shadow:0 5px 15px rgba(0,0,0,.15);position:relative}
+.brand-icon::after{content:"";position:absolute;inset:-3px;border-radius:20px;padding:3px;background:conic-gradient(var(--bandera-amarillo) 0 33%,var(--bandera-rojo) 33% 66%,var(--bandera-verde) 66% 100%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9}
+.brand-icon svg{width:36px;height:36px;position:relative;z-index:1}
+.brand-icon img{width:100%;height:100%;object-fit:contain;border-radius:14px;position:relative;z-index:1}
 .brand-text h1{font-size:22px;line-height:1.2;font-weight:800;letter-spacing:.2px}
 .brand-text p{margin-top:5px;font-size:12px;font-weight:500;color:#dbe8ff;letter-spacing:.5px}
 .system-status{display:flex;align-items:center;gap:10px;padding:10px 15px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.17);border-radius:30px;font-size:12px;font-weight:700;white-space:nowrap;transition:all .3s ease}
@@ -54,13 +64,13 @@ main{padding:28px 0 45px}
 .title-icon svg{width:20px;height:20px}
 .card-title h2{font-size:18px;font-weight:800}
 .card-title p{color:var(--gris);margin-top:3px;font-size:12px}
-.form-body{padding:25px}
-.form-section{margin-bottom:28px}
+.form-body{padding:22px 24px}
+.form-section{margin-bottom:20px;padding:16px 16px 4px;background:#fbfcfe;border:1px solid #eef2f6;border-radius:12px}
 .form-section:last-child{margin-bottom:0}
-.form-section-title{display:flex;align-items:center;gap:10px;margin-bottom:17px;padding-bottom:11px;border-bottom:1px solid #edf1f5}
-.form-section-title .number{width:27px;height:27px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:white;background:var(--azul);font-size:12px;font-weight:800}
-.form-section-title h3{font-size:14px;font-weight:800;color:var(--gris-oscuro);text-transform:uppercase;letter-spacing:.3px}
-.form-grid{display:grid;grid-template-columns:120px 180px 145px 180px minmax(220px,1fr);gap:17px 15px;align-items:end}
+.form-section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #edf1f5}
+.form-section-title .number{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:7px;color:white;background:var(--azul);font-size:11px;font-weight:800;flex-shrink:0}
+.form-section-title h3{font-size:13px;font-weight:800;color:var(--gris-oscuro);text-transform:uppercase;letter-spacing:.3px}
+.form-grid{display:grid;grid-template-columns:120px 180px 145px 180px minmax(220px,1fr);gap:14px;align-items:end}
 .form-grid.two{grid-template-columns:repeat(2,1fr)}
 .form-grid.three{grid-template-columns:repeat(3,1fr)}
 .form-grid.four{grid-template-columns:repeat(4,1fr)}
@@ -70,15 +80,15 @@ main{padding:28px 0 45px}
 .field.span-3{grid-column:span 3}
 label{display:block;margin-bottom:7px;color:#475569;font-size:12px;font-weight:750}
 label.required::after{content:" *";color:var(--rojo)}
-input,select,textarea{width:100%;border:1px solid #d5dde7;background:#fbfcfe;color:var(--texto);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s,background .18s}
-input,select{height:43px}
-textarea{min-height:100px;resize:vertical;line-height:1.5}
+input,select,textarea{width:100%;border:1px solid #d5dde7;background:#fff;color:var(--texto);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:13px;outline:none;transition:border-color .18s,box-shadow .18s,background .18s}
+input,select{height:39px}
+textarea{min-height:80px;resize:vertical;line-height:1.5}
 input:hover,select:hover,textarea:hover{background:white;border-color:#b8c5d5}
 input:focus,select:focus,textarea:focus{background:white;border-color:var(--azul);box-shadow:0 0 0 3px rgba(23,78,166,.10)}
 input[readonly]{background:#f1f5f9;color:#64748b;cursor:not-allowed}
 .fecha-limite{background:#f7faff !important;border-color:#c8d9f4 !important;font-weight:750}
-.form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:22px;margin-top:25px;border-top:1px solid var(--gris-borde)}
-.btn{border:0;min-height:42px;padding:10px 17px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .15s,opacity .15s}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:18px;margin-top:20px;border-top:1px solid var(--gris-borde)}
+.btn{border:0;min-height:40px;padding:9px 16px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .15s,opacity .15s}
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
@@ -98,10 +108,29 @@ input[readonly]{background:#f1f5f9;color:#64748b;cursor:not-allowed}
 .table-wrapper{width:100%;overflow:auto;border-radius:0 0 var(--radio) var(--radio)}
 table{width:100%;border-collapse:separate;border-spacing:0;min-width:1250px}
 thead th{position:sticky;top:0;z-index:2;background:#f1f5f9;color:#475569;border-bottom:1px solid #dbe3ec;padding:13px 11px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-tbody td{padding:13px 11px;border-bottom:1px solid #edf1f5;font-size:12px;color:#334155;vertical-align:middle}
+thead th.ordenable{cursor:pointer;user-select:none}
+thead th.ordenable:hover{color:var(--azul)}
+thead th.ordenable .flecha{display:inline-block;margin-left:4px;opacity:.35;font-size:9px}
+thead th.ordenable.orden-asc .flecha,thead th.ordenable.orden-desc .flecha{opacity:1;color:var(--azul)}
+tbody td{padding:var(--fila-altura-comoda) 11px;border-bottom:1px solid #edf1f5;font-size:12px;color:#334155;vertical-align:middle;transition:padding .15s}
+.table-wrapper.compacta tbody td{padding:var(--fila-altura-compacta) 11px;font-size:11.5px}
 tbody tr{transition:background .15s}
 tbody tr:hover{background:#f8fbff}
 tbody tr:last-child td{border-bottom:0}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid var(--gris-borde);background:#fbfcfe}
+.table-toolbar .conteo{font-size:12px;color:var(--gris);font-weight:650}
+.table-toolbar .conteo strong{color:var(--gris-oscuro)}
+.table-toolbar-opciones{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.densidad-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--gris);font-weight:700}
+.densidad-toggle button{border:1px solid var(--gris-borde);background:white;color:var(--gris);width:28px;height:28px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.densidad-toggle button.activo{background:var(--azul-claro);border-color:var(--azul);color:var(--azul)}
+.pagina-tamano select{height:30px;padding:2px 8px;font-size:11px;border-radius:7px}
+.paginacion{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border-top:1px solid var(--gris-borde)}
+.paginacion button{width:30px;height:30px;border-radius:8px;border:1px solid var(--gris-borde);background:white;color:var(--gris-oscuro);cursor:pointer;font-size:12px;font-weight:700}
+.paginacion button:hover:not(:disabled){border-color:var(--azul);color:var(--azul)}
+.paginacion button.activo{background:var(--azul);border-color:var(--azul);color:white}
+.paginacion button:disabled{opacity:.4;cursor:not-allowed}
+.filtros-toggle{display:none}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:80px;padding:5px 9px;border-radius:20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 .badge-pendiente{color:#936000;background:#fff4d4}
 .badge-tramite{color:#5d43c5;background:#eeeaff}
@@ -166,12 +195,35 @@ tbody tr:last-child td{border-bottom:0}
 @media(max-width:900px){.topbar-inner{align-items:flex-start}.system-status{display:none}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four{grid-template-columns:repeat(2,1fr)}.field.span-2,.field.span-3{grid-column:span 2}}
 @media(max-width:650px){.container{width:94%}main{padding-top:17px}.topbar-inner{min-height:auto}.brand-icon{width:50px;height:50px;border-radius:13px}.brand-icon svg{width:28px;height:28px}.brand-text h1{font-size:17px}.brand-text p{font-size:10px}.dashboard{grid-template-columns:repeat(2,1fr);gap:10px}.kpi{padding:15px}.kpi-number{font-size:25px}.kpi-icon{width:37px;height:37px}.tabs{width:100%}.tab{flex:1;padding:11px 10px;font-size:12px}.card-header{padding:17px}.form-body{padding:17px}.form-grid,.form-grid.two,.form-grid.three,.form-grid.four{grid-template-columns:1fr}.field.span-2,.field.span-3,.field.full{grid-column:1}.form-actions{flex-direction:column-reverse}.form-actions .btn{width:100%}.detail-grid{grid-template-columns:1fr}.detail-item.full{grid-column:1}.toast-container{left:12px;right:12px;bottom:12px}.toast{min-width:0;width:100%}}
 @media(max-width:420px){.dashboard{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .filtros-toggle{display:flex;align-items:center;gap:8px;width:100%;justify-content:space-between;padding:14px 20px;background:#fbfcfe;border:0;border-bottom:1px solid var(--gris-borde);color:var(--gris-oscuro);font-weight:800;font-size:13px;cursor:pointer}
+  .filtros-toggle svg{transition:transform .2s}
+  .filtros-toggle.abierto svg{transform:rotate(180deg)}
+  .filter-panel{display:none}
+  .filter-panel.abierto{display:block}
+  .filter-panel .filter-title{display:none}
+  .table-toolbar{padding:12px 16px}
+}
+@media(max-width:760px){
+  .table-wrapper{overflow:visible}
+  table{min-width:0}
+  thead{display:none}
+  tbody tr{display:block;background:white;border:1px solid var(--gris-borde);border-radius:12px;margin:0 12px 12px;box-shadow:0 3px 10px rgba(15,23,42,.05);overflow:hidden}
+  tbody tr:last-child{margin-bottom:12px}
+  tbody td{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:9px 13px;border-bottom:1px dashed #eef1f5;text-align:right}
+  tbody td:last-child{border-bottom:0}
+  tbody td::before{content:attr(data-label);flex:0 0 auto;text-align:left;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:#94a3b8;padding-top:1px}
+  tbody td.col-acciones{justify-content:flex-end}
+  tbody td.col-acciones::before{display:none}
+  .table-wrapper.compacta tbody td{padding:6px 13px}
+}
 .hidden{display:none !important}
 </style>
 </head>
 <body>
 <div class="app">
 <header class="topbar">
+    <div class="bandera-franja" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="container topbar-inner">
         <div class="brand">
             <div class="brand-icon">
@@ -268,7 +320,11 @@ tbody tr:last-child td{border-bottom:0}
             <button class="btn btn-outline btn-sm" onclick="cargarRegistros()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px"><path d="M3 12a9 9 0 0 1 15.54-6.14L21 9M21 3v6h-6M21 12a9 9 0 0 1-15.54 6.14L3 15M3 21v-6h6"/></svg>Actualizar</button>
         </div>
     </div>
-    <div class="filter-panel">
+    <button type="button" class="filtros-toggle" id="btnFiltrosToggle" onclick="toggleFiltros()">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:6px"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtros de búsqueda</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="filter-panel" id="panelFiltros">
         <div class="filter-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtros de búsqueda</div>
         <div class="filters">
             <div class="filter-field"><label>Radicado</label><input type="text" id="filtroRadicado" placeholder="Buscar..."></div>
@@ -282,18 +338,52 @@ tbody tr:last-child td{border-bottom:0}
             <div class="filter-field"><label>Hasta</label><input type="date" id="filtroHasta"></div>
         </div>
     </div>
-    <div class="table-wrapper">
+    <div class="table-toolbar">
+        <div class="conteo" id="conteoRegistros">Mostrando <strong>0</strong> de <strong>0</strong> registros</div>
+        <div class="table-toolbar-opciones">
+            <div class="densidad-toggle">
+                Densidad
+                <button type="button" id="btnDensidadComoda" class="activo" title="Cómoda" onclick="cambiarDensidad('comoda')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <button type="button" id="btnDensidadCompacta" title="Compacta" onclick="cambiarDensidad('compacta')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 10h16M4 15h16M4 20h16"/></svg>
+                </button>
+            </div>
+            <div class="pagina-tamano">
+                <select id="selectorTamanoPagina" onchange="cambiarTamanoPagina(this.value)">
+                    <option value="10">10 / página</option>
+                    <option value="25" selected>25 / página</option>
+                    <option value="50">50 / página</option>
+                    <option value="0">Ver todos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="table-wrapper" id="tableWrapper">
         <table>
-            <thead><tr><th>Consecutivo</th><th>Radicado</th><th>Recepción</th><th>Peticionario</th><th>Documento</th><th>Tipo</th><th>Funcionario</th><th>Fecha límite</th><th>Días restantes</th><th>Semáforo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr>
+                <th class="ordenable" data-campo="consecutivo" onclick="ordenarPor('consecutivo')">Consecutivo<span class="flecha">▲</span></th>
+                <th class="ordenable" data-campo="radicado" onclick="ordenarPor('radicado')">Radicado<span class="flecha">▲</span></th>
+                <th class="ordenable" data-campo="fechaRecepcion" onclick="ordenarPor('fechaRecepcion')">Recepción<span class="flecha">▲</span></th>
+                <th>Peticionario</th><th>Documento</th><th>Tipo</th><th>Funcionario</th>
+                <th class="ordenable" data-campo="fechaLimite" onclick="ordenarPor('fechaLimite')">Fecha límite<span class="flecha">▲</span></th>
+                <th class="ordenable" data-campo="diasRestantes" onclick="ordenarPor('diasRestantes')">Días restantes<span class="flecha">▲</span></th>
+                <th>Semáforo</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
             <tbody id="tablaRegistros"><tr><td colspan="12"><div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></div><h3>Cargando registros</h3><p>Espere mientras se consulta la información.</p></div></td></tr></tbody>
         </table>
     </div>
+    <div class="paginacion" id="paginacionContenedor"></div>
 </div>
 </section>
 </div>
 </main>
 
-<footer class="footer"><div class="container"><strong>SECRETARÍA DE MOVILIDAD – LA CEJA DEL TAMBO</strong><br>Sistema de Gestión de Peticiones · V5.0 Optimizado</div></footer>
+<footer class="footer">
+    <div class="bandera-franja" aria-hidden="true" style="margin-bottom:16px"><span></span><span></span><span></span></div>
+    <div class="container"><strong>SECRETARÍA DE MOVILIDAD – LA CEJA DEL TAMBO</strong><br>Sistema de Gestión de Peticiones · V5.0 Optimizado</div>
+</footer>
 </div>
 
 <div id="modalDetalle" class="modal" onclick="cerrarModalFondo(event)">
@@ -675,6 +765,7 @@ function aplicarFiltros() {
         if (hasta && fecha && fecha > hasta) return false;
         return true;
     });
+    paginaActual = 1;
     renderizarTabla();
 }
 
@@ -726,14 +817,116 @@ function obtenerDiasRestantes(r) {
     return Math.ceil((limite - hoy) / 86400000);
 }
 
+let paginaActual = 1;
+let tamanoPagina = 25;
+let ordenCampo = null;
+let ordenDireccion = 1; // 1 = asc, -1 = desc
+
+function ordenarPor(campo) {
+    if (ordenCampo === campo) { ordenDireccion = -ordenDireccion; }
+    else { ordenCampo = campo; ordenDireccion = 1; }
+    paginaActual = 1;
+    renderizarTabla();
+}
+
+function valorOrdenable(r, campo) {
+    if (campo === "diasRestantes") return obtenerDiasRestantes(r) === "" ? -Infinity : Number(obtenerDiasRestantes(r));
+    if (campo === "consecutivo") return Number(textoRegistro(r, ["consecutivo", "CONSECUTIVO", "Consecutivo"])) || 0;
+    if (campo === "fechaRecepcion") return normalizarFecha(textoRegistro(r, ["fechaRecepcion", "FECHA_RECEPCION", "Fecha recepción"]));
+    if (campo === "fechaLimite") return normalizarFecha(textoRegistro(r, ["fechaLimite", "FECHA_LIMITE", "Fecha límite de respuesta"]));
+    if (campo === "radicado") return textoRegistro(r, ["radicado", "RADICADO", "ID / Radicado"]).toLowerCase();
+    return "";
+}
+
+function actualizarIndicadoresOrden() {
+    document.querySelectorAll("th.ordenable").forEach(function(th) {
+        th.classList.remove("orden-asc", "orden-desc");
+        const span = th.querySelector(".flecha");
+        if (th.dataset.campo === ordenCampo) {
+            th.classList.add(ordenDireccion === 1 ? "orden-asc" : "orden-desc");
+            if (span) span.textContent = ordenDireccion === 1 ? "▲" : "▼";
+        } else if (span) { span.textContent = "▲"; }
+    });
+}
+
+function cambiarDensidad(modo) {
+    const wrapper = document.getElementById("tableWrapper");
+    if (wrapper) wrapper.classList.toggle("compacta", modo === "compacta");
+    const btnComoda = document.getElementById("btnDensidadComoda");
+    const btnCompacta = document.getElementById("btnDensidadCompacta");
+    if (btnComoda) btnComoda.classList.toggle("activo", modo !== "compacta");
+    if (btnCompacta) btnCompacta.classList.toggle("activo", modo === "compacta");
+}
+
+function cambiarTamanoPagina(valor) {
+    tamanoPagina = parseInt(valor, 10) || 0;
+    paginaActual = 1;
+    renderizarTabla();
+}
+
+function cambiarPagina(numero) {
+    paginaActual = numero;
+    renderizarTabla();
+}
+
+function toggleFiltros() {
+    const panel = document.getElementById("panelFiltros");
+    const boton = document.getElementById("btnFiltrosToggle");
+    if (!panel || !boton) return;
+    panel.classList.toggle("abierto");
+    boton.classList.toggle("abierto");
+}
+
+function renderizarPaginacion(total) {
+    const contenedor = document.getElementById("paginacionContenedor");
+    if (!contenedor) return;
+    if (!tamanoPagina || total <= tamanoPagina) { contenedor.innerHTML = ""; return; }
+    const totalPaginas = Math.ceil(total / tamanoPagina);
+    let html = `<button ${paginaActual === 1 ? "disabled" : ""} onclick="cambiarPagina(${paginaActual - 1})" title="Anterior">‹</button>`;
+    const inicio = Math.max(1, paginaActual - 2);
+    const fin = Math.min(totalPaginas, inicio + 4);
+    for (let i = inicio; i <= fin; i++) {
+        html += `<button class="${i === paginaActual ? "activo" : ""}" onclick="cambiarPagina(${i})">${i}</button>`;
+    }
+    html += `<button ${paginaActual === totalPaginas ? "disabled" : ""} onclick="cambiarPagina(${paginaActual + 1})" title="Siguiente">›</button>`;
+    contenedor.innerHTML = html;
+}
+
 function renderizarTabla() {
     const tbody = document.getElementById("tablaRegistros");
+    const conteo = document.getElementById("conteoRegistros");
     if (!tbody) return;
-    if (!registrosFiltrados.length) {
+    const total = registrosFiltrados.length;
+    if (!total) {
         tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></div><h3>No se encontraron registros</h3><p>Ajuste los filtros o registre una nueva petición.</p></div></td></tr>`;
+        if (conteo) conteo.innerHTML = `Mostrando <strong>0</strong> de <strong>0</strong> registros`;
+        renderizarPaginacion(0);
         return;
     }
-    tbody.innerHTML = registrosFiltrados.map(function(r) {
+
+    let lista = registrosFiltrados.slice();
+    if (ordenCampo) {
+        lista.sort(function(a, b) {
+            const va = valorOrdenable(a, ordenCampo), vb = valorOrdenable(b, ordenCampo);
+            if (va < vb) return -1 * ordenDireccion;
+            if (va > vb) return 1 * ordenDireccion;
+            return 0;
+        });
+    }
+    actualizarIndicadoresOrden();
+
+    const totalPaginas = tamanoPagina ? Math.ceil(total / tamanoPagina) : 1;
+    if (paginaActual > totalPaginas) paginaActual = totalPaginas || 1;
+    const inicio = tamanoPagina ? (paginaActual - 1) * tamanoPagina : 0;
+    const fin = tamanoPagina ? inicio + tamanoPagina : total;
+    const paginaDatos = lista.slice(inicio, fin);
+
+    if (conteo) {
+        conteo.innerHTML = `Mostrando <strong>${Math.min(fin, total) - inicio}</strong> de <strong>${total}</strong> registros`;
+    }
+    renderizarPaginacion(total);
+
+    tbody.innerHTML = paginaDatos.map(function(r) {
         const radicado = escapeHTML(textoRegistro(r, ["radicado", "RADICADO", "ID / Radicado"]));
         const radicadoSafe = radicado.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const consecutivo = escapeHTML(textoRegistro(r, ["consecutivo", "CONSECUTIVO", "Consecutivo"]));
@@ -747,18 +940,18 @@ function renderizarTabla() {
         const semaforo = obtenerSemaforo(r);
         const estado = textoRegistro(r, ["estado", "ESTADO", "Estado"]);
         return `<tr>
-            <td><strong>${consecutivo}</strong></td>
-            <td>${radicado}</td>
-            <td>${recepcion}</td>
-            <td>${peticionario}</td>
-            <td>${documento}</td>
-            <td>${tipo}</td>
-            <td>${funcionario}</td>
-            <td>${fechaLimite}</td>
-            <td>${formatearDias(dias)}</td>
-            <td>${badgeSemaforo(semaforo)}</td>
-            <td>${badgeEstado(estado)}</td>
-            <td>
+            <td data-label="Consecutivo"><strong>${consecutivo}</strong></td>
+            <td data-label="Radicado">${radicado}</td>
+            <td data-label="Recepción">${recepcion}</td>
+            <td data-label="Peticionario">${peticionario}</td>
+            <td data-label="Documento">${documento}</td>
+            <td data-label="Tipo">${tipo}</td>
+            <td data-label="Funcionario">${funcionario}</td>
+            <td data-label="Fecha límite">${fechaLimite}</td>
+            <td data-label="Días restantes">${formatearDias(dias)}</td>
+            <td data-label="Semáforo">${badgeSemaforo(semaforo)}</td>
+            <td data-label="Estado">${badgeEstado(estado)}</td>
+            <td class="col-acciones">
                 <div class="actions">
                     <button class="action-btn" title="Ver detalle" onclick="verDetallePorId('${radicadoSafe}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     <button class="action-btn" title="Editar" onclick="editarRegistroPorId('${radicadoSafe}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
