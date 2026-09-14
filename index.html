@@ -420,7 +420,10 @@ const CONFIG = {
     API_URL: "https://script.google.com/macros/s/AKfycbxcF5HkikFfopPdPW98p5FoTLmcPPDgZk65AKgZEPRlstm-hQlRGY_t4nDNX0kTPXU/exec",
     DIAS_ALERTA: 3,
     TERMINO_POR_DEFECTO: 15,
-    DEBOUNCE_MS: 400
+    DEBOUNCE_MS: 400,
+    CACHE_REGISTROS_MS: 5 * 60 * 1000,
+    CACHE_REGISTROS_MAX_BYTES: 4500000,
+    CARGA_INICIAL_SIN_BLOQUEO: true
 };
 
 let registros = [];
@@ -438,12 +441,19 @@ document.addEventListener("DOMContentLoaded", function() { inicializar(); });
 
 function inicializar() {
     setConnectionStatus('connecting');
+
+    // 1. Pintar inmediatamente lo que ya exista en caché del navegador.
     cargarMenusDesdeCache();
-    cargarDatosIniciales();
+    const huboCacheRegistros = cargarRegistrosDesdeCache();
+
+    // 2. El formulario queda disponible sin esperar a Google Sheets.
     cargarSiguienteConsecutivo();
     establecerFechaHoy();
     calcularFechaLimite();
     configurarFiltros();
+
+    // 3. Actualización en segundo plano. No bloquea la pantalla.
+    cargarDatosIniciales(!huboCacheRegistros);
 }
 
 function setConnectionStatus(status) {
@@ -480,25 +490,47 @@ function cargarMenusDesdeCache() {
     }
 }
 
-function cargarDatosIniciales() {
-    mostrarLoading("Cargando información del sistema...");
+function cargarDatosIniciales(mostrarCarga) {
+    if (mostrarCarga) {
+        mostrarCargaInicialLigera("Actualizando información...");
+    }
+
     if (ES_APPS_SCRIPT) {
         google.script.run
-            .withSuccessHandler(function(data) { ocultarLoading(); procesarDatosIniciales(data); })
-            .withFailureHandler(function(error) { ocultarLoading(); setConnectionStatus('disconnected'); mostrarToast("Error al cargar datos: " + (error.message || error), "error"); })
+            .withSuccessHandler(function(data) {
+                ocultarLoading();
+                procesarDatosIniciales(data);
+            })
+            .withFailureHandler(function(error) {
+                ocultarLoading();
+                setConnectionStatus('disconnected');
+
+                // Si ya tenemos datos locales, no bloqueamos al usuario.
+                if (registros.length) {
+                    mostrarToast("Mostrando información guardada. No fue posible actualizarla.", "warning");
+                } else {
+                    mostrarToast("Error al cargar datos: " + (error.message || error), "error");
+                }
+            })
             .obtenerDatosIniciales();
         return;
     }
+
     fetch(CONFIG.API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ accion: "obtenerDatosIniciales" }),
-        redirect: 'follow'
+        redirect: "follow"
     })
     .then(async function(response) {
+        if (!response.ok) throw new Error("HTTP " + response.status);
         const texto = await response.text();
         let data;
-        try { data = JSON.parse(texto); } catch (e) { throw new Error("Respuesta inválida"); }
+        try {
+            data = JSON.parse(texto);
+        } catch (e) {
+            throw new Error("Respuesta inválida del servidor");
+        }
         if (data.ok === false) throw new Error(data.mensaje || "Error del servidor");
         ocultarLoading();
         procesarDatosIniciales(data);
@@ -506,28 +538,104 @@ function cargarDatosIniciales() {
     .catch(function(error) {
         ocultarLoading();
         setConnectionStatus('disconnected');
-        mostrarToast("No se pudo conectar con el servidor: " + error.message, "error");
+
+        if (registros.length) {
+            mostrarToast("Mostrando información guardada. No fue posible actualizarla.", "warning");
+        } else {
+            mostrarToast("No se pudo conectar con el servidor: " + error.message, "error");
+        }
     });
 }
 
+function mostrarCargaInicialLigera(texto) {
+    // Durante la carga inicial NO usamos una pantalla bloqueante.
+    // Solo mostramos el estado de conexión.
+    const statusText = document.getElementById("statusText");
+    if (statusText) statusText.textContent = texto || "ACTUALIZANDO...";
+}
+
 function procesarDatosIniciales(data) {
-    if (!data) { setConnectionStatus('disconnected'); return; }
-    if (data.funcionarios && data.tipos) {
-        localStorage.setItem('cache_menus_peticiones', JSON.stringify({
-            funcionarios: data.funcionarios, tipos: data.tipos, timestamp: Date.now()
-        }));
+    if (!data) {
+        setConnectionStatus('disconnected');
+        return;
     }
-    llenarSelect("funcionario", data.funcionarios || [], "Seleccione funcionario...");
-    llenarSelect("filtroFuncionario", data.funcionarios || [], "Todos");
-    llenarSelect("tipoPeticion", data.tipos || [], "Seleccione...");
-    llenarSelect("filtroTipo", data.tipos || [], "Todos");
+
+    if (data.funcionarios && data.tipos) {
+        guardarCacheMenus(data.funcionarios, data.tipos);
+        llenarSelect("funcionario", data.funcionarios || [], "Seleccione funcionario...");
+        llenarSelect("filtroFuncionario", data.funcionarios || [], "Todos");
+        llenarSelect("tipoPeticion", data.tipos || [], "Seleccione...");
+        llenarSelect("filtroTipo", data.tipos || [], "Todos");
+    }
+
     if (data.registros) {
         registros = Array.isArray(data.registros) ? data.registros : [];
+        guardarCacheRegistros(registros);
         registrosFiltrados = [...registros];
-        renderizarTabla();
+        aplicarFiltros();
     }
-    if (data.dashboard) actualizarDashboardConDatos(data.dashboard);
+
+    if (data.dashboard) {
+        actualizarDashboardConDatos(data.dashboard);
+    } else if (registros.length) {
+        actualizarDashboard();
+    }
+
     setConnectionStatus('connected');
+}
+
+function guardarCacheMenus(funcionariosData, tiposData) {
+    try {
+        localStorage.setItem('cache_menus_peticiones', JSON.stringify({
+            funcionarios: funcionariosData || [],
+            tipos: tiposData || [],
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        console.warn("No fue posible guardar caché de menús:", e);
+    }
+}
+
+function guardarCacheRegistros(datos) {
+    if (!Array.isArray(datos) || !datos.length) return;
+
+    try {
+        const payload = JSON.stringify({
+            registros: datos,
+            timestamp: Date.now()
+        });
+
+        if (payload.length <= CONFIG.CACHE_REGISTROS_MAX_BYTES) {
+            localStorage.setItem('cache_registros_peticiones', payload);
+        } else {
+            console.warn("Caché de registros omitida por tamaño:", payload.length);
+        }
+    } catch (e) {
+        console.warn("No fue posible guardar caché de registros:", e);
+    }
+}
+
+function cargarRegistrosDesdeCache() {
+    try {
+        const bruto = localStorage.getItem('cache_registros_peticiones');
+        if (!bruto) return false;
+
+        const data = JSON.parse(bruto);
+        if (!data || !Array.isArray(data.registros)) return false;
+
+        const edad = Date.now() - Number(data.timestamp || 0);
+        if (edad < 0 || edad > CONFIG.CACHE_REGISTROS_MS) return false;
+
+        registros = data.registros;
+        registrosFiltrados = [...registros];
+        aplicarFiltros();
+        actualizarDashboard();
+        setConnectionStatus('connected');
+        return registros.length > 0;
+    } catch (e) {
+        console.warn("Error leyendo caché de registros:", e);
+        return false;
+    }
 }
 
 function mostrarTab(tab, boton) {
@@ -684,41 +792,64 @@ function activarBotonGuardar(activo) {
 function cargarRegistros() {
     if (estaCargando) return;
     estaCargando = true;
-    mostrarLoading("Consultando registros...");
+
+    // Actualización manual: usamos un indicador discreto.
+    mostrarCargaInicialLigera("ACTUALIZANDO...");
+
     if (ES_APPS_SCRIPT) {
         google.script.run
             .withSuccessHandler(function(data) {
-                estaCargando = false; ocultarLoading();
-                registros = Array.isArray(data) ? data : (data.registros || data.data || []);
-                aplicarFiltros(); actualizarDashboard(); setConnectionStatus('connected');
+                estaCargando = false;
+                registros = Array.isArray(data)
+                    ? data
+                    : (data.registros || data.data || []);
+
+                guardarCacheRegistros(registros);
+                aplicarFiltros();
+                actualizarDashboard();
+                setConnectionStatus('connected');
             })
             .withFailureHandler(function(error) {
-                estaCargando = false; ocultarLoading();
-                mostrarToast("Error al cargar la tabla: " + (error.message || error), "error");
+                estaCargando = false;
                 setConnectionStatus('disconnected');
+                mostrarToast("Error al cargar la tabla: " + (error.message || error), "error");
             })
             .listarRegistros();
         return;
     }
+
     fetch(CONFIG.API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ accion: "listarRegistros" }),
-        redirect: 'follow'
+        redirect: "follow"
     })
     .then(async function(response) {
+        if (!response.ok) throw new Error("HTTP " + response.status);
         const texto = await response.text();
         let data;
-        try { data = JSON.parse(texto); } catch (e) { throw new Error("Respuesta inválida"); }
+        try {
+            data = JSON.parse(texto);
+        } catch (e) {
+            throw new Error("Respuesta inválida");
+        }
         if (data.ok === false) throw new Error(data.mensaje || "Error al listar");
-        estaCargando = false; ocultarLoading();
-        registros = Array.isArray(data) ? data : (data.registros || data.data || []);
-        aplicarFiltros(); actualizarDashboard(); setConnectionStatus('connected');
+
+        registros = Array.isArray(data)
+            ? data
+            : (data.registros || data.data || []);
+
+        guardarCacheRegistros(registros);
+        aplicarFiltros();
+        actualizarDashboard();
+        setConnectionStatus('connected');
     })
     .catch(function(error) {
-        estaCargando = false; ocultarLoading();
-        mostrarToast("Error al cargar registros: " + error.message, "error");
         setConnectionStatus('disconnected');
+        mostrarToast("Error al cargar registros: " + error.message, "error");
+    })
+    .finally(function() {
+        estaCargando = false;
     });
 }
 
